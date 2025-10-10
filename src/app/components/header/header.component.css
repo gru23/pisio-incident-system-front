@@ -1,0 +1,24 @@
+a {
+    text-decoration: none;
+    color: aliceblue;
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #8ebbff;
+    height: 45px;
+    padding: 30px;
+}
+
+.header-title {
+    font-size: 30px;
+    color: aliceblue;
+}
+
+.header-username {
+    font-size: 18px;
+    color: aliceblue;
+}
