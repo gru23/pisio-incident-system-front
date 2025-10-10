@@ -1,0 +1,59 @@
+mat-form-field {
+  min-width: 180px;
+  flex: 1;
+}
+
+hr {
+  width: 98%;
+  height: 1px;
+  background-color: #8ebbff;
+}
+
+.filter-container {
+  margin: 22px;
+  
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.type-field {
+  flex: 1 1 200px;
+}
+
+.location-field {
+  flex: 2 1 250px;
+}
+
+.time-field {
+  flex: 1 1 150px;
+}
+
+.map-container {
+  margin: 22px;
+}
+
+.add-incident-container {
+
+}
+
+.report-container {
+  margin: 16px;
+  padding: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 12px;
+}

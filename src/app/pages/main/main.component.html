@@ -1,0 +1,92 @@
+<mat-card class="filter-container">
+  <mat-card-content [formGroup]="form">
+
+    <div class="filter-row">
+
+      <!-- Vrsta incidenta -->
+      <mat-form-field appearance="fill" class="type-field">
+        <mat-label>Type</mat-label>
+        <mat-select formControlName="type" (selectionChange)="onTypeChange()">
+          <mat-option *ngFor="let type of incidentTypes" [value]="type.name">
+            {{ type.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Lokacija -->
+      <mat-form-field appearance="fill" class="location-field">
+        <mat-label>Location</mat-label>
+        <input matInput formControlName="location" placeholder="Enter city or street" />
+      </mat-form-field>
+
+      <!-- Vremenski opseg -->
+      <mat-form-field appearance="fill" class="time-field">
+        <mat-label>Time</mat-label>
+        <mat-select formControlName="time">
+          <mat-option *ngFor="let t of timeRanges" [value]="t.value">
+            {{ t.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Dugme za filtriranje -->
+      <button mat-raised-button color="primary" (click)="applyFilter()">
+        <mat-icon>filter_alt</mat-icon> Filter
+      </button>
+
+      <!-- Dugme za reset -->
+      <button mat-stroked-button color="warn" (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon> Reset
+      </button>
+
+    </div>
+    
+  </mat-card-content>
+</mat-card>
+
+<div class="map-container">
+    <app-map></app-map>
+</div>
+
+<hr />
+
+<div class="add-incident-container">
+    <mat-card class="report-container">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()">
+            <div class="form-row">
+            <!-- Adresa -->
+            <mat-form-field appearance="fill">
+                <mat-label>Address</mat-label>
+                <input matInput formControlName="address" placeholder="Street, city, country" />
+            </mat-form-field>
+
+            <!-- Vrsta incidenta -->
+            <mat-form-field appearance="fill">
+                <mat-label>Type</mat-label>
+                <mat-select formControlName="type">
+                <mat-option *ngFor="let type of incidentTypes" [value]="type">
+                    {{ type }}
+                </mat-option>
+                </mat-select>
+            </mat-form-field>
+
+            <!-- Slika -->
+            <button mat-button color="primary" component="label">
+                <mat-icon>upload</mat-icon> Image
+                <input type="file" accept="image/*" hidden (change)="onImageSelect($event)" />
+            </button>
+
+            <!-- Submit dugme -->
+            <button mat-raised-button color="accent" type="submit">
+                <mat-icon>send</mat-icon> Submit
+            </button>
+            </div>
+
+            <!-- Opis -->
+            <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Description</mat-label>
+            <textarea matInput rows="4" formControlName="description" placeholder="Enter details..."></textarea>
+            </mat-form-field>
+        </form>
+    </mat-card>
+</div>
