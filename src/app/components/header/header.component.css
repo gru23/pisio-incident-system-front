@@ -18,6 +18,14 @@ a {
     color: aliceblue;
 }
 
+.header-title img {
+  height: 72px;
+  margin-left: 10px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+
 .header-username {
     font-size: 18px;
     color: aliceblue;
