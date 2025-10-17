@@ -1,22 +1,43 @@
 <mat-card class="filter-container">
-  <mat-card-content [formGroup]="form">
-
+  <mat-card-title>Filter</mat-card-title>
+  <mat-card-content [formGroup]="filterForm">
     <div class="filter-row">
+      <!-- Lokacija -->
+      <mat-form-field appearance="fill" class="location-field">
+        <mat-label>Location</mat-label>
+        <input
+          matInput
+          formControlName="location"
+          placeholder="Enter city or street"
+        />
+      </mat-form-field>
 
       <!-- Vrsta incidenta -->
       <mat-form-field appearance="fill" class="type-field">
         <mat-label>Type</mat-label>
-        <mat-select formControlName="type" (selectionChange)="onTypeChange()">
-          <mat-option *ngFor="let type of incidentTypes" [value]="type.name">
+        <mat-select
+          formControlName="type"
+          (selectionChange)="onTypeChange('filter')"
+        >
+          <mat-option *ngFor="let type of incidentTypes" [value]="type.type">
             {{ type.name }}
           </mat-option>
         </mat-select>
       </mat-form-field>
 
-      <!-- Lokacija -->
-      <mat-form-field appearance="fill" class="location-field">
-        <mat-label>Location</mat-label>
-        <input matInput formControlName="location" placeholder="Enter city or street" />
+      <mat-form-field appearance="fill" class="type-field">
+        <mat-label>Subtype</mat-label>
+        <mat-select
+          formControlName="subtype"
+          [disabled]="!filterForm.get('type')?.value"
+        >
+          <mat-option
+            *ngFor="let subtype of selectedFilterSubtypes"
+            [value]="subtype"
+          >
+            {{ getSubtypeName(subtype) }}
+          </mat-option>
+        </mat-select>
       </mat-form-field>
 
       <!-- Vremenski opseg -->
@@ -38,55 +59,92 @@
       <button mat-stroked-button color="warn" (click)="clearFilters()">
         <mat-icon>filter_alt_off</mat-icon> Reset
       </button>
-
     </div>
-    
   </mat-card-content>
 </mat-card>
 
 <div class="map-container">
-    <app-map></app-map>
+  <app-map (locationSelected)="onMapLocationSelected($event)"></app-map>
 </div>
 
 <hr />
 
 <div class="add-incident-container">
-    <mat-card class="report-container">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()">
-            <div class="form-row">
-            <!-- Adresa -->
-            <mat-form-field appearance="fill">
-                <mat-label>Address</mat-label>
-                <input matInput formControlName="address" placeholder="Street, city, country" />
-            </mat-form-field>
+  <mat-card class="report-container">
+    <mat-card-title>Submit incident</mat-card-title>
+    <form [formGroup]="submitForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <!-- Adresa -->
+        <mat-form-field appearance="fill">
+          <mat-label>Address</mat-label>
+          <input
+            matInput
+            formControlName="address"
+            placeholder="Street, city, country"
+          />
+          <mat-error *ngIf="submitForm.get('address')?.hasError('required') && submitForm.get('address')?.touched">
+            Address is required.
+          </mat-error>
+        </mat-form-field>
 
-            <!-- Vrsta incidenta -->
-            <mat-form-field appearance="fill">
-                <mat-label>Type</mat-label>
-                <mat-select formControlName="type">
-                <mat-option *ngFor="let type of incidentTypes" [value]="type">
-                    {{ type }}
-                </mat-option>
-                </mat-select>
-            </mat-form-field>
+        <!-- Vrsta incidenta -->
+        <mat-form-field appearance="fill">
+          <mat-label>Type</mat-label>
+          <mat-select
+            formControlName="type"
+            (selectionChange)="onTypeChange('submit')"
+          >
+            <mat-option *ngFor="let type of incidentTypes" [value]="type.type">
+              {{ type.name }}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="submitForm.get('type')?.hasError('required') && submitForm.get('type')?.touched">
+            Type is required.
+          </mat-error>
+        </mat-form-field>
 
-            <!-- Slika -->
-            <button mat-button color="primary" component="label">
-                <mat-icon>upload</mat-icon> Image
-                <input type="file" accept="image/*" hidden (change)="onImageSelect($event)" />
-            </button>
+        <mat-form-field appearance="fill">
+          <mat-label>Subtype</mat-label>
+          <mat-select
+            formControlName="subtype"
+            [disabled]="!submitForm.get('type')?.value"
+          >
+            <mat-option
+              *ngFor="let subtype of selectedSubmitSubtypes"
+              [value]="subtype"
+            >
+              {{ getSubtypeName(subtype) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
 
-            <!-- Submit dugme -->
-            <button mat-raised-button color="accent" type="submit">
-                <mat-icon>send</mat-icon> Submit
-            </button>
-            </div>
+        <!-- Slika -->
+        <button mat-button color="primary" component="label">
+          <mat-icon>upload</mat-icon> Image
+          <input
+            type="file"
+            accept="image/*"
+            hidden
+            (change)="onImageSelect($event)"
+          />
+        </button>
 
-            <!-- Opis -->
-            <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Description</mat-label>
-            <textarea matInput rows="4" formControlName="description" placeholder="Enter details..."></textarea>
-            </mat-form-field>
-        </form>
-    </mat-card>
+        <!-- Submit dugme -->
+        <button mat-raised-button color="accent" type="submit">
+          <mat-icon>send</mat-icon> Submit
+        </button>
+      </div>
+
+      <!-- Opis -->
+      <mat-form-field appearance="fill" class="full-width">
+        <mat-label>Description</mat-label>
+        <textarea
+          matInput
+          rows="4"
+          formControlName="description"
+          placeholder="Enter details..."
+        ></textarea>
+      </mat-form-field>
+    </form>
+  </mat-card>
 </div>
