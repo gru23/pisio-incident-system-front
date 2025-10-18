@@ -156,24 +156,45 @@ export class MainComponent {
     }
   }
 
-  onSubmit(): void {
-    if (
-      this.submitForm.invalid ||
-      !this.selectedCoordinates ||
-      !this.reverseGeocodedAddress
-    ) {
+  async onSubmit(): Promise<void> {
+    if (this.submitForm.invalid) {
       this.submitForm.markAllAsTouched();
-      console.warn('Forma nije validna ili lokacija/adresa nije dostupna.');
+      console.warn('⛔ Forma nije validna.');
       return;
     }
 
     const formValue = this.submitForm.value;
-    const { lat, lng } = this.selectedCoordinates;
+
+    let coords = this.selectedCoordinates;
+
+    // Ako korisnik nije kliknuo mapu – koristi adresu iz inputa
+    if (!coords) {
+      const address = formValue.address;
+      if (!address) {
+        console.warn('⛔ Nema unesene adrese.');
+        return;
+      }
+
+      coords = await this.geocodeAddress(address);
+
+      if (!coords) {
+        console.warn('⛔ Nema pronađenih koordinata za unijetu adresu.');
+        return;
+      }
+    }
+
+    const { lat, lng } = coords;
+
+    const reverseGeocoded = await this.reverseGeocode(lat, lng);
+    if (!reverseGeocoded) {
+      console.warn('⛔ Neuspješan reverse geocoding.');
+      return;
+    }
 
     const location: LocationModel = {
       latitude: Number(lat.toPrecision(6)),
       longitude: Number(lng.toPrecision(6)),
-      ...this.reverseGeocodedAddress,
+      ...reverseGeocoded,
     };
 
     const incident: IncidentModel = {
@@ -186,19 +207,18 @@ export class MainComponent {
 
     console.log('✅ Incident za slanje:', incident);
     this.submitForm.reset();
+    this.selectedCoordinates = null;
 
     this.incidentService.submitIncident(incident).subscribe({
       next: (response) => {
         console.log('✅ Incident uspješno poslan:', response);
-        // Ovdje možeš prikazati poruku ili resetovati formu
-        this.submitForm.reset();
-        this.selectedCoordinates = null;
       },
       error: (err) => {
         console.error('⛔ Greška prilikom slanja incidenta:', err);
       },
     });
   }
+
 
   onMapLocationSelected(coords: { lat: number; lng: number }) {
     this.selectedCoordinates = coords;
@@ -236,13 +256,39 @@ export class MainComponent {
     const address = response.address;
 
     return {
-      radius: 500,
+      radius: 1000,
       address: response.display_name || '',
       city: address.city || address.town || address.village || '',
       state: address.state || '',
       country: address.country || '',
       zipcode: address.postcode || '',
     };
+  }
+
+  private async geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+    const encodedAddress = encodeURIComponent(address);
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodedAddress}&limit=1`;
+
+    try {
+      const response: any = await this.http.get(url, {
+        headers: {
+          'Accept-Language': 'en',
+          'User-Agent': 'your-app-name' // Bitno za Nominatim
+        }
+      }).toPromise();
+
+      if (Array.isArray(response) && response.length > 0) {
+        return {
+          lat: parseFloat(response[0].lat),
+          lng: parseFloat(response[0].lon),
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error('⛔ Greška prilikom geokodiranja adrese:', error);
+      return null;
+    }
   }
 
   clearFilters(): void {
