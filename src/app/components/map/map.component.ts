@@ -4,9 +4,11 @@ import {
   PLATFORM_ID,
   Inject,
   Output,
-  EventEmitter
+  EventEmitter,
+  Input
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { IncidentModel } from '../../models/incident-model';
 
 @Component({
   selector: 'app-map',
@@ -16,9 +18,12 @@ import { isPlatformBrowser } from '@angular/common';
   styleUrls: ['./map.component.css']
 })
 export class MapComponent implements OnInit {
+  @Input() incidents: IncidentModel[] = [];
   @Output() locationSelected = new EventEmitter<{ lat: number; lng: number }>();
 
   private isBrowser: boolean;
+  private map: any;
+  private currentMarker: any; // tip L.Marker, ali koristimo `any` da ne importujemo Leaflet globalno
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -29,45 +34,75 @@ export class MapComponent implements OnInit {
 
     const L = await import('leaflet');
 
-    // Default marker ikona
-    const defaultIcon = L.icon({
-      iconUrl: 'assets/leaflet/marker-icon.png',
-      iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
+    // ✅ Ikona za approved incidente
+    const approvedIcon = L.icon({
+      iconUrl: 'assets/leaflet/approved_marker_32.png',
+      iconRetinaUrl: 'assets/leaflet/approved_marker_64.png',
       shadowUrl: 'assets/leaflet/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
       popupAnchor: [1, -34],
       tooltipAnchor: [16, -28],
-      shadowSize: [41, 41]
+      shadowSize: [32, 32]
     });
 
-    L.Marker.prototype.options.icon = defaultIcon;
+    // 📍 Ikona za trenutno odabrani marker (klik na mapu)
+    this.currentIcon = L.icon({
+      iconUrl: 'assets/leaflet/current_marker_32.png',
+      iconRetinaUrl: 'assets/leaflet/current_marker_64.png',
+      shadowUrl: 'assets/leaflet/marker-shadow.png',
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [1, -34],
+      tooltipAnchor: [16, -28],
+      shadowSize: [32, 32]
+    });
 
-    const map = L.map('map').setView([44.766582, 17.186928], 13);
+    // Inicijalizacija mape
+    this.map = L.map('map').setView([44.284536, 18.0626781], 8);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
-    }).addTo(map);
+    }).addTo(this.map);
 
-    // Dodaj prazan marker koji će se ažurirati
-    let marker: L.Marker | null = null;
+    // 🧷 Dodaj markere za incidente iz baze sa approved ikonom
+    this.incidents.forEach((incident) => {
+      const { latitude, longitude } = incident.location;
+      L.marker([latitude, longitude], { icon: approvedIcon })
+        .addTo(this.map)
+        .bindPopup(
+          `<b>${incident.type}</b><br />
+           <b>Description: </b>${incident.description}<br />
+           <b>Address: </b>${incident.location.address}`
+        );
+    });
 
-    // Klik na mapu
-    map.on('click', (e: L.LeafletMouseEvent) => {
+    // 📍 Postavljanje markera klikom na mapu
+    this.map.on('click', (e: any) => {
       const { lat, lng } = e.latlng;
 
-      if (marker) {
-        marker.setLatLng([lat, lng]);
+      if (this.currentMarker) {
+        this.currentMarker.setLatLng([lat, lng]);
       } else {
-        marker = L.marker([lat, lng]).addTo(map);
+        this.currentMarker = L.marker([lat, lng], { icon: this.currentIcon }).addTo(this.map);
       }
 
       this.locationSelected.emit({ lat, lng });
     });
 
-    // Popravi dimenzije ako treba
+    // Popravi dimenzije mape ako je u tabu itd.
     setTimeout(() => {
-      map.invalidateSize();
+      this.map.invalidateSize();
     }, 0);
   }
+
+  // 🔻 Poziva se iz MainComponent nakon uspješnog submita
+  public removeCurrentMarker(): void {
+    if (this.currentMarker && this.map) {
+      this.map.removeLayer(this.currentMarker);
+      this.currentMarker = null;
+    }
+  }
+
+  private currentIcon: any;
 }
