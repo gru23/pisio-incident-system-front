@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormBuilder,
@@ -15,12 +15,13 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 
 import { MapComponent } from '../../components/map/map.component';
-import { IncidentType } from '../../enums';
+import { IncidentStatus, IncidentType } from '../../enums';
 import { IncidentSubtype } from '../../enums';
 import { LocationModel } from '../../models/location-model';
 import { IncidentModel } from '../../models/incident-model';
 import { HttpClient } from '@angular/common/http';
 import { IncidentService } from '../../services/incident/incident.service';
+import { FilterRequestDto } from '../../models/requests/filter-request.dto';
 
 @Component({
   selector: 'app-main',
@@ -39,7 +40,12 @@ import { IncidentService } from '../../services/incident/incident.service';
   templateUrl: './main.component.html',
   styleUrl: './main.component.css',
 })
-export class MainComponent {
+export class MainComponent implements OnInit {
+  @ViewChild(MapComponent) mapComponent!: MapComponent;
+
+
+  approvedIncidents: IncidentModel[] = [];
+
   filterForm: FormGroup;
   submitForm: FormGroup;
   selectedSubtypes: IncidentSubtype[] = [];
@@ -59,7 +65,7 @@ export class MainComponent {
     {
       type: IncidentType.Fire,
       name: 'Fire',
-      subtypes: [IncidentSubtype.BuildingFire],
+      subtypes: [IncidentSubtype.BuildingFire, IncidentSubtype.CarAccident],
     },
     {
       type: IncidentType.Flood,
@@ -91,10 +97,11 @@ export class MainComponent {
   ];
 
   timeRanges = [
+    { label: 'Last 1h', value: '1h' },
     { label: 'Last 24h', value: '24h' },
     { label: 'Last 7 days', value: '7d' },
     { label: 'Last 31 days', value: '31d' },
-    { label: 'All reports', value: 'all' },
+    { label: 'All incidents', value: 'all' }
   ];
 
   constructor(
@@ -116,6 +123,22 @@ export class MainComponent {
       description: [''],
     });
   }
+
+  ngOnInit(): void {
+    this.loadApprovedIncidents();
+  }
+
+  loadApprovedIncidents(): void {
+      this.incidentService.getIncidents('APPROVED').subscribe({
+        next: (data) => {
+          this.approvedIncidents = data.content;  // Ako koristiš paginaciju, ovo je obično lista u 'content'
+          console.log('✅ Incidents with status APPROVED:', this.approvedIncidents);
+        },
+        error: (err) => {
+          console.error('⛔ Error loading approved incidents:', err);
+        }
+      });
+    }
 
   onTypeChange(context: 'filter' | 'submit'): void {
     const form = context === 'filter' ? this.filterForm : this.submitForm;
@@ -146,7 +169,24 @@ export class MainComponent {
       time: this.filterForm.value.time,
     });
 
-    // Poziv API-ja ili emit događaja za filtriranje
+    const filter: FilterRequestDto = {
+      incidentType: this.filterForm.value.type || null,
+      incidentSubtype: this.filterForm.value.subtype || null,
+      location: this.filterForm.value.location || null,
+      timeRange: this.filterForm.value.time || null,
+      status: IncidentStatus.Approved
+    }
+
+    this.incidentService.filterIncidents(filter, 0, 20).subscribe({
+      next: (page) => {
+        this.approvedIncidents = page.content;
+        // Emitiraj event ili postavi te incidente na mapu
+        console.log('Filtrirani incidenti:', this.approvedIncidents);
+      },
+      error: (error) => {
+        console.error('Greška pri filtriranju incidenata:', error);
+      }
+    });
   }
 
   onImageSelect(event: Event): void {
@@ -157,67 +197,70 @@ export class MainComponent {
   }
 
   async onSubmit(): Promise<void> {
-    if (this.submitForm.invalid) {
-      this.submitForm.markAllAsTouched();
-      console.warn('⛔ Forma nije validna.');
-      return;
-    }
-
-    const formValue = this.submitForm.value;
-
-    let coords = this.selectedCoordinates;
-
-    // Ako korisnik nije kliknuo mapu – koristi adresu iz inputa
-    if (!coords) {
-      const address = formValue.address;
-      if (!address) {
-        console.warn('⛔ Nema unesene adrese.');
-        return;
-      }
-
-      coords = await this.geocodeAddress(address);
-
-      if (!coords) {
-        console.warn('⛔ Nema pronađenih koordinata za unijetu adresu.');
-        return;
-      }
-    }
-
-    const { lat, lng } = coords;
-
-    const reverseGeocoded = await this.reverseGeocode(lat, lng);
-    if (!reverseGeocoded) {
-      console.warn('⛔ Neuspješan reverse geocoding.');
-      return;
-    }
-
-    const location: LocationModel = {
-      latitude: Number(lat.toPrecision(6)),
-      longitude: Number(lng.toPrecision(6)),
-      ...reverseGeocoded,
-    };
-
-    const incident: IncidentModel = {
-      type: formValue.type,
-      subtype: formValue.subtype === '' ? null : formValue.subtype,
-      location,
-      description: formValue.description,
-      images: [], // za sada prazno
-    };
-
-    console.log('✅ Incident za slanje:', incident);
-    this.submitForm.reset();
-    this.selectedCoordinates = null;
-
-    this.incidentService.submitIncident(incident).subscribe({
-      next: (response) => {
-        console.log('✅ Incident uspješno poslan:', response);
-      },
-      error: (err) => {
-        console.error('⛔ Greška prilikom slanja incidenta:', err);
-      },
-    });
+  if (this.submitForm.invalid) {
+    this.submitForm.markAllAsTouched();
+    console.warn('⛔ Forma nije validna.');
+    return;
   }
+
+  const formValue = this.submitForm.value;
+  const address = formValue.address?.trim();
+
+  let coords: { lat: number; lng: number } | null = null;
+
+  // 🟢 Uvijek pokušaj koristiti adresu iz forme
+  if (address) {
+    coords = await this.geocodeAddress(address);
+
+    if (!coords) {
+      console.warn('⛔ Neuspješno geokodiranje unijete adrese.');
+      return;
+    }
+  } else if (this.selectedCoordinates) {
+    // ⚠️ Ako nema adrese, koristi marker sa mape
+    coords = this.selectedCoordinates;
+  } else {
+    console.warn('⛔ Nema ni adrese ni koordinata.');
+    return;
+  }
+
+  const { lat, lng } = coords;
+
+  const reverseGeocoded = await this.reverseGeocode(lat, lng);
+  if (!reverseGeocoded) {
+    console.warn('⛔ Neuspješan reverse geocoding.');
+    return;
+  }
+
+  const location: LocationModel = {
+    latitude: Number(lat.toPrecision(6)),
+    longitude: Number(lng.toPrecision(6)),
+    ...reverseGeocoded,
+  };
+
+  const incident: IncidentModel = {
+    type: formValue.type,
+    subtype: formValue.subtype === '' ? null : formValue.subtype,
+    location,
+    description: formValue.description,
+    images: [],
+  };
+
+  console.log('✅ Incident za slanje:', incident);
+
+  this.incidentService.submitIncident(incident).subscribe({
+    next: (response) => {
+      this.mapComponent.removeCurrentMarker();
+      this.submitForm.reset();
+      this.selectedCoordinates = null;
+      console.log('✅ Incident uspješno poslan:', response);
+    },
+    error: (err) => {
+      console.error('⛔ Greška prilikom slanja incidenta:', err);
+    },
+  });
+}
+
 
 
   onMapLocationSelected(coords: { lat: number; lng: number }) {
