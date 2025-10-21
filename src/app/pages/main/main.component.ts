@@ -107,7 +107,7 @@ export class MainComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private incidentService: IncidentService
+    private incidentService: IncidentService,
   ) {
     this.filterForm = this.fb.group({
       type: [''],
@@ -132,6 +132,7 @@ export class MainComponent implements OnInit {
       this.incidentService.getIncidents('APPROVED').subscribe({
         next: (data) => {
           this.approvedIncidents = data.content;  // Ako koristiš paginaciju, ovo je obično lista u 'content'
+          this.mapComponent.updateMarkers(this.approvedIncidents);
           console.log('✅ Incidents with status APPROVED:', this.approvedIncidents);
         },
         error: (err) => {
@@ -162,17 +163,10 @@ export class MainComponent implements OnInit {
   }
 
   applyFilter(): void {
-    console.log('Filter podaci:', {
-      type: this.filterForm.value.type,
-      subtype: this.filterForm.value.subtype,
-      location: this.filterForm.value.location,
-      time: this.filterForm.value.time,
-    });
-
     const filter: FilterRequestDto = {
       incidentType: this.filterForm.value.type || null,
       incidentSubtype: this.filterForm.value.subtype || null,
-      location: this.filterForm.value.location || null,
+      location: this.filterForm.value.location?.trim() || null,
       timeRange: this.filterForm.value.time || null,
       status: IncidentStatus.Approved
     }
@@ -180,6 +174,7 @@ export class MainComponent implements OnInit {
     this.incidentService.filterIncidents(filter, 0, 20).subscribe({
       next: (page) => {
         this.approvedIncidents = page.content;
+        this.mapComponent.updateMarkers(this.approvedIncidents);
         // Emitiraj event ili postavi te incidente na mapu
         console.log('Filtrirani incidenti:', this.approvedIncidents);
       },
@@ -316,7 +311,7 @@ export class MainComponent implements OnInit {
       const response: any = await this.http.get(url, {
         headers: {
           'Accept-Language': 'en',
-          'User-Agent': 'your-app-name' // Bitno za Nominatim
+          // 'User-Agent': 'your-app-name'
         }
       }).toPromise();
 
@@ -337,5 +332,6 @@ export class MainComponent implements OnInit {
   clearFilters(): void {
     this.filterForm.reset();
     this.selectedSubtypes = [];
+    this.loadApprovedIncidents();
   }
 }

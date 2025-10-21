@@ -23,7 +23,9 @@ export class MapComponent implements OnInit {
 
   private isBrowser: boolean;
   private map: any;
-  private currentMarker: any; // tip L.Marker, ali koristimo `any` da ne importujemo Leaflet globalno
+  private currentMarker: any;
+  private currentIcon: any;
+  private approvedIcon: any;
 
   constructor(@Inject(PLATFORM_ID) private platformId: Object) {
     this.isBrowser = isPlatformBrowser(this.platformId);
@@ -33,9 +35,10 @@ export class MapComponent implements OnInit {
     if (!this.isBrowser) return;
 
     const L = await import('leaflet');
+    (window as any).L = L; // omogućava korištenje u drugim metodama
 
     // ✅ Ikona za approved incidente
-    const approvedIcon = L.icon({
+    this.approvedIcon = L.icon({
       iconUrl: 'assets/leaflet/approved_marker_32.png',
       iconRetinaUrl: 'assets/leaflet/approved_marker_64.png',
       shadowUrl: 'assets/leaflet/marker-shadow.png',
@@ -65,17 +68,8 @@ export class MapComponent implements OnInit {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(this.map);
 
-    // 🧷 Dodaj markere za incidente iz baze sa approved ikonom
-    this.incidents.forEach((incident) => {
-      const { latitude, longitude } = incident.location;
-      L.marker([latitude, longitude], { icon: approvedIcon })
-        .addTo(this.map)
-        .bindPopup(
-          `<b>${incident.type}</b><br />
-           <b>Description: </b>${incident.description}<br />
-           <b>Address: </b>${incident.location.address}`
-        );
-    });
+    // ➕ Dodaj početne incidente
+    this.addIncidentMarkers(this.incidents);
 
     // 📍 Postavljanje markera klikom na mapu
     this.map.on('click', (e: any) => {
@@ -96,13 +90,50 @@ export class MapComponent implements OnInit {
     }, 0);
   }
 
-  // 🔻 Poziva se iz MainComponent nakon uspješnog submita
+  /**
+   * 🔁 Ažurira markere na osnovu novih incidenata.
+   */
+  public updateMarkers(incidents: IncidentModel[]): void {
+    if (!this.map) return;
+
+    const L = (window as any).L;
+
+    // Ukloni sve prethodne markere osim currentMarkera
+    this.map.eachLayer((layer: any) => {
+      if (layer instanceof L.Marker && layer !== this.currentMarker) {
+        this.map.removeLayer(layer);
+      }
+    });
+
+    this.addIncidentMarkers(incidents);
+  }
+
+  /**
+   * ✅ Pomoćna metoda za dodavanje markera.
+   */
+  private addIncidentMarkers(incidents: IncidentModel[]): void {
+    const L = (window as any).L;
+
+    incidents.forEach((incident) => {
+      const { latitude, longitude } = incident.location;
+
+      L.marker([latitude, longitude], { icon: this.approvedIcon })
+        .addTo(this.map)
+        .bindPopup(
+          `<b>${incident.type}</b><br />
+           <b>Description:</b> ${incident.description}<br />
+           <b>Address:</b> ${incident.location.address}`
+        );
+    });
+  }
+
+  /**
+   * 🔻 Uklanja trenutno selektovani marker (npr. nakon slanja forme).
+   */
   public removeCurrentMarker(): void {
     if (this.currentMarker && this.map) {
       this.map.removeLayer(this.currentMarker);
       this.currentMarker = null;
     }
   }
-
-  private currentIcon: any;
 }
