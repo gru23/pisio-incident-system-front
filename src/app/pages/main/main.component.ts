@@ -171,6 +171,8 @@ export class MainComponent implements OnInit {
       status: IncidentStatus.Approved
     }
 
+    console.log(filter);
+
     this.incidentService.filterIncidents(filter, 0, 20).subscribe({
       next: (page) => {
         this.approvedIncidents = page.content;
@@ -239,6 +241,7 @@ export class MainComponent implements OnInit {
     location,
     description: formValue.description,
     images: [],
+    status: IncidentStatus.Pending
   };
 
   console.log('✅ Incident za slanje:', incident);
