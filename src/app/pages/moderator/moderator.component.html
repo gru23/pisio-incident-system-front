@@ -1,4 +1,4 @@
-<mat-card class="filter-container">
+<!-- <mat-card class="filter-container">
   <mat-card-title>Filter</mat-card-title>
   <mat-card-content [formGroup]="filterForm">
     <div class="filter-row">
@@ -16,7 +16,6 @@
 
       
 
-      <!-- Vrsta incidenta -->
       <mat-form-field appearance="fill" class="type-field">
         <mat-label>Type</mat-label>
         <mat-select
@@ -46,7 +45,6 @@
     </div>
     
     <div class="filter-row">
-        <!-- Lokacija -->
       <mat-form-field appearance="fill" class="location-field">
         <mat-label>Location</mat-label>
         <input
@@ -56,7 +54,6 @@
         />
       </mat-form-field>
 
-      <!-- Vremenski opseg -->
       <mat-form-field appearance="fill" class="time-field">
         <mat-label>Time</mat-label>
         <mat-select formControlName="time">
@@ -66,22 +63,21 @@
         </mat-select>
       </mat-form-field>
 
-      <!-- Dugme za filtriranje -->
       <button mat-raised-button color="primary" (click)="applyFilter()">
         <mat-icon>filter_alt</mat-icon> Filter
       </button>
 
-      <!-- Dugme za reset -->
       <button mat-stroked-button color="warn" (click)="clearFilters()">
         <mat-icon>filter_alt_off</mat-icon> Reset
       </button>
     </div>
   </mat-card-content>
-</mat-card>
+</mat-card> -->
 
 <div class="map-container">
   <app-map
     [incidents]="approvedIncidents"
+    [isModerator]="true"
     (mapReady)="onMapReady()"
   ></app-map>
 </div>

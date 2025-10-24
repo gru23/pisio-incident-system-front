@@ -64,7 +64,12 @@
 </mat-card>
 
 <div class="map-container">
-  <app-map [incidents]="approvedIncidents" (locationSelected)="onMapLocationSelected($event)"></app-map>
+  <app-map 
+    [incidents]="approvedIncidents" 
+    [isModerator]="false"
+    (locationSelected)="onMapLocationSelected($event)"
+  >
+  </app-map>
 </div>
 
 <hr />

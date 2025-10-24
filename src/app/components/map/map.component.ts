@@ -21,6 +21,7 @@ import { ModerationService } from '../../services/moderation/moderation.service'
 })
 export class MapComponent implements OnInit {
   @Input() incidents: IncidentModel[] = [];
+  @Input() isModerator: boolean = false; // default false
   @Output() locationSelected = new EventEmitter<{ lat: number; lng: number }>();
   @Output() mapReady = new EventEmitter<void>(); // 👈 novi event
 
@@ -146,47 +147,7 @@ export class MapComponent implements OnInit {
     this.addIncidentMarkers(incidents);
   }
 
-  private addIncidentMarkers(incidents: IncidentModel[]): void {
-  const L = (window as any).L;
-
-  incidents.forEach((incident) => {
-    const { latitude, longitude } = incident.location;
-    const marker = L.marker([latitude, longitude], { icon: this.getMarkerIcon(incident.status) }).addTo(this.map);
-
-    const popupContent = `
-      <div>
-        <h3>${incident.status}</h3>
-        <b>${incident.type}</b><br/>
-        <b>Description:</b> ${incident.description}<br/>
-        <b>Address:</b> ${incident.location.address}<br/>
-        <hr/>
-        
-        <label for="status-select-${incident.id}">Change status:</label>
-        <select id="status-select-${incident.id}">
-          <option value="PENDING" ${incident.status === 'PENDING' ? 'selected' : ''}>Pending</option>
-          <option value="APPROVED" ${incident.status === 'APPROVED' ? 'selected' : ''}>Approved</option>
-          <option value="REJECTED" ${incident.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
-          <option value="REPORTED" ${incident.status === 'REPORTED' ? 'selected' : ''}>Reported</option>
-        </select> 
-        
-        <button id="submit-status-${incident.id}" style="margin-top:4px;">Submit</button>
-      </div>
-    `;
-
-    marker.bindPopup(popupContent);
-
-    // 🧠 Kada se popup otvori, dodaj event listener
-    marker.on('popupopen', () => {
-      const selectEl = document.getElementById(`status-select-${incident.id}`) as HTMLSelectElement;
-      const submitBtn = document.getElementById(`submit-status-${incident.id}`);
-
-      submitBtn?.addEventListener('click', () => {
-        const newStatus = selectEl.value;
-        this.changeStatus(incident, newStatus);
-      });
-    });
-  });
-}
+  
 
 
 
@@ -240,9 +201,38 @@ export class MapComponent implements OnInit {
     }
   }
   
-  private changeStatus(incident: IncidentModel, newStatus: string): void {
-    if(!incident.id)
-      return;
+  private addIncidentMarkers(incidents: IncidentModel[]): void {
+  const L = (window as any).L;
+
+  incidents.forEach((incident) => {
+    const { latitude, longitude } = incident.location;
+    const marker = L.marker([latitude, longitude], { icon: this.getMarkerIcon(incident.status) }).addTo(this.map);
+
+    // Čuvamo incidentId u marker-u
+    (marker as any).incidentId = incident.id;
+
+    const popupContent = this.buildPopupContent(incident);
+    marker.bindPopup(popupContent);
+
+    // 🧠 Kada se popup otvori, dodaj event listener sa once: true
+    marker.on('popupopen', () => {
+      if(!this.isModerator) return;
+      
+      const selectEl = document.getElementById(`status-select-${incident.id}`) as HTMLSelectElement;
+      const submitBtn = document.getElementById(`submit-status-${incident.id}`) as HTMLButtonElement;
+
+      submitBtn?.addEventListener('click', () => {
+        if (selectEl) {
+          const newStatus = selectEl.value;
+          this.changeStatus(incident, newStatus);
+        }
+      }, { once: true }); // <-- listener se aktivira samo jednom po popupu
+    });
+  });
+}
+
+private changeStatus(incident: IncidentModel, newStatus: string): void {
+  if(!incident.id) return;
 
   const parsedStatus = newStatus as IncidentStatus;
 
@@ -253,24 +243,11 @@ export class MapComponent implements OnInit {
       // 🔄 Ažuriraj lokalni status incidenta
       incident.status = updatedIncident.status;
 
-      // 📍 Promijeni ikonu markera
-      const L = (window as any).L;
-      const newIcon = this.getMarkerIcon(updatedIncident.status);
-
-      // Pronađi marker koji odgovara incidentu (po lokaciji)
+      // 📍 Pronađi marker po incidentId, a ne po lat/lng
       this.map.eachLayer((layer: any) => {
-        if (layer instanceof L.Marker && layer.getLatLng) {
-          const latLng = layer.getLatLng();
-          if (
-            Math.abs(latLng.lat - incident.location.latitude) < 0.0001 &&
-            Math.abs(latLng.lng - incident.location.longitude) < 0.0001
-          ) {
-            layer.setIcon(newIcon);
-
-            // ✏️ Osvježi popup sadržaj
-            const popupHtml = this.buildPopupContent(incident);
-            layer.bindPopup(popupHtml);
-          }
+        if (layer instanceof (window as any).L.Marker && layer.incidentId === incident.id) {
+          layer.setIcon(this.getMarkerIcon(updatedIncident.status));
+          layer.bindPopup(this.buildPopupContent(incident));
         }
       });
 
@@ -283,22 +260,31 @@ export class MapComponent implements OnInit {
   });
 }
 
+
   private buildPopupContent(incident: IncidentModel): string {
-  return `
+  const baseContent = `
     <h3>${incident.status}</h3>
     <b>${incident.type}</b><br/>
     <b>Description:</b> ${incident.description}<br/>
     <b>Address:</b> ${incident.location.address}<br/>
-    <hr/>
-    <label for="status-select-${incident.id}">Change status:</label>
-    <select id="status-select-${incident.id}">
-      <option value="PENDING" ${incident.status === 'PENDING' ? 'selected' : ''}>Pending</option>
-      <option value="APPROVED" ${incident.status === 'APPROVED' ? 'selected' : ''}>Approved</option>
-      <option value="REJECTED" ${incident.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
-      <option value="REPORTED" ${incident.status === 'REPORTED' ? 'selected' : ''}>Reported</option>
-    </select>
-    <button id="submit-status-${incident.id}" style="margin-top:4px;">Submit</button>
   `;
+
+  if (this.isModerator) {
+    return baseContent + `
+      <hr/>
+      <label for="status-select-${incident.id}">Change status:</label>
+      <select id="status-select-${incident.id}">
+        <option value="PENDING" ${incident.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+        <option value="APPROVED" ${incident.status === 'APPROVED' ? 'selected' : ''}>Approved</option>
+        <option value="REJECTED" ${incident.status === 'REJECTED' ? 'selected' : ''}>Rejected</option>
+        <option value="REPORTED" ${incident.status === 'REPORTED' ? 'selected' : ''}>Reported</option>
+      </select>
+      <button id="submit-status-${incident.id}" style="margin-top:4px;">Submit</button>
+    `;
+  }
+
+  return baseContent; // običan korisnik vidi samo informacije
 }
+
 
 }
