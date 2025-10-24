@@ -1,0 +1,68 @@
+mat-card-title {
+  padding: 10px;
+  text-align: center;
+}
+
+mat-form-field {
+  min-width: 180px;
+  flex: 1;
+}
+
+hr {
+  width: 98%;
+  height: 1px;
+  background-color: #8ebbff;
+}
+
+.filter-container {
+  margin: 22px;
+  
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-field {
+    flex: 1 1 120px;
+}
+
+.type-field {
+  flex: 1 1 120px;
+}
+
+.location-field {
+  flex: 2 1 200px;
+}
+
+.time-field {
+  flex: 1 1 120px;
+}
+
+.map-container {
+  margin: 22px;
+}
+
+.emtpy-container {
+  height: 10px;
+}
+
+.report-container {
+  margin: 16px;
+  padding: 16px;
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+}
+
+.full-width {
+  width: 100%;
+  margin-top: 12px;
+}

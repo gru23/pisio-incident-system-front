@@ -1,1 +1,89 @@
-<p>moderator works!</p>
+<mat-card class="filter-container">
+  <mat-card-title>Filter</mat-card-title>
+  <mat-card-content [formGroup]="filterForm">
+    <div class="filter-row">
+        <mat-form-field appearance="fill" class="status-field">
+        <mat-label>Status</mat-label>
+        <mat-select
+          formControlName="status"
+          (selectionChange)="onTypeChange()"
+        >
+          <mat-option *ngFor="let status of incidentStatus" [value]="status.label">
+            {{ status.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      
+
+      <!-- Vrsta incidenta -->
+      <mat-form-field appearance="fill" class="type-field">
+        <mat-label>Type</mat-label>
+        <mat-select
+          formControlName="type"
+          (selectionChange)="onTypeChange()"
+        >
+          <mat-option *ngFor="let type of incidentTypes" [value]="type.type">
+            {{ type.name }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill" class="type-field">
+        <mat-label>Subtype</mat-label>
+        <mat-select
+          formControlName="subtype"
+          [disabled]="!filterForm.get('type')?.value"
+        >
+          <mat-option
+            *ngFor="let subtype of selectedFilterSubtypes"
+            [value]="subtype"
+          >
+            {{ getSubtypeName(subtype) }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>      
+    </div>
+    
+    <div class="filter-row">
+        <!-- Lokacija -->
+      <mat-form-field appearance="fill" class="location-field">
+        <mat-label>Location</mat-label>
+        <input
+          matInput
+          formControlName="location"
+          placeholder="Enter city or street"
+        />
+      </mat-form-field>
+
+      <!-- Vremenski opseg -->
+      <mat-form-field appearance="fill" class="time-field">
+        <mat-label>Time</mat-label>
+        <mat-select formControlName="time">
+          <mat-option *ngFor="let t of timeRanges" [value]="t.value">
+            {{ t.label }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Dugme za filtriranje -->
+      <button mat-raised-button color="primary" (click)="applyFilter()">
+        <mat-icon>filter_alt</mat-icon> Filter
+      </button>
+
+      <!-- Dugme za reset -->
+      <button mat-stroked-button color="warn" (click)="clearFilters()">
+        <mat-icon>filter_alt_off</mat-icon> Reset
+      </button>
+    </div>
+  </mat-card-content>
+</mat-card>
+
+<div class="map-container">
+  <app-map
+    [incidents]="approvedIncidents"
+    (mapReady)="onMapReady()"
+  ></app-map>
+</div>
+
+<div class="emtpy-container"></div>
