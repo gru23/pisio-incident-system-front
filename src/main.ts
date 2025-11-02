@@ -2,6 +2,9 @@ import { bootstrapApplication } from '@angular/platform-browser';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient } from '@angular/common/http';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
+
 
 import { AppComponent } from './app/app.component';
 import { routes } from './app/app.routes';
@@ -10,6 +13,7 @@ bootstrapApplication(AppComponent, {
   providers: [
     provideAnimations(),
     provideRouter(routes),
-    provideHttpClient()
+    provideHttpClient(),
+    provideCharts(withDefaultRegisterables([ChartDataLabels]))
   ]
 });

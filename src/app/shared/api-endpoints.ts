@@ -8,3 +8,10 @@ export const API_INCIDENT_ENDPOINTS = {
 export const API_MODERATION_ENDPOINTS = {
   updateStatus: (id: number) => `${API_BASE_URL}/moderation/${id}/status`,
 }
+
+export const API_ANALYTICS_ENDPOINTS = {
+  cityIncidentCount: `${API_BASE_URL}/analytics/count-by-city`,
+  typeIncidentCount: `${API_BASE_URL}/analytics/count-by-type`,
+  incidentPerDay: (year: number, month: number) => 
+    `${API_BASE_URL}/analytics/count-by-month?year=${year}&month=${month}`
+}

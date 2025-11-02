@@ -1,0 +1,25 @@
+<div style="max-width: 900px; margin: 20px auto;">
+      <div style="display: flex; justify-content: center; gap: 1rem; margin-bottom: 20px;">
+        <!-- GODINA -->
+        <mat-form-field appearance="fill">
+          <mat-label>Year</mat-label>
+          <mat-select [(ngModel)]="selectedYear" (selectionChange)="loadData()">
+            <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- MJESEC -->
+        <mat-form-field appearance="fill">
+          <mat-label>Month</mat-label>
+          <mat-select [(ngModel)]="selectedMonth" (selectionChange)="loadData()">
+            <mat-option *ngFor="let m of months" [value]="m.value">{{ m.name }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <canvas baseChart
+        [data]="lineChartData"
+        [options]="lineChartOptions"
+        [type]="lineChartType">
+      </canvas>
+    </div>
