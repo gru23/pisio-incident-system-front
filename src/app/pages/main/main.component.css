@@ -42,10 +42,6 @@ hr {
   margin: 22px;
 }
 
-.add-incident-container {
-
-}
-
 .report-container {
   margin: 16px;
   padding: 16px;
@@ -61,4 +57,41 @@ hr {
 .full-width {
   width: 100%;
   margin-top: 12px;
+}
+
+
+.upload-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  height: 36px;
+  font-size: 14px;
+  font-weight: 500;
+  border-radius: 20px;
+  cursor: pointer;
+  background-color: #faf9fd;
+  color: #005cbb;
+  box-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2),
+              0px 2px 2px 0px rgba(0,0,0,0.14),
+              0px 1px 5px 0px rgba(0,0,0,0.12);
+  transition: background-color 0.3s, box-shadow 0.3s;
+}
+
+.upload-button:hover {
+  background-color: #dae2f9;
+  box-shadow: 0px 5px 5px -3px rgba(0,0,0,0.2),
+              0px 8px 10px 1px rgba(0,0,0,0.14),
+              0px 3px 14px 2px rgba(0,0,0,0.12);
+}
+
+.upload-button:active {
+  background-color: #0d47a1;
+  box-shadow: 0px 2px 1px -1px rgba(0,0,0,0.2),
+              0px 1px 1px 0px rgba(0,0,0,0.14),
+              0px 1px 3px 0px rgba(0,0,0,0.12);
+}
+
+.upload-button mat-icon {
+  margin-right: 8px;
+  font-size: 20px;
 }

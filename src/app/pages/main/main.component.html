@@ -124,7 +124,21 @@
         </mat-form-field>
 
         <!-- Slika -->
-        <button mat-button color="primary" component="label">
+        <label class="upload-button">
+          <mat-icon>upload</mat-icon>
+          Image
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            hidden
+            (change)="onImageSelect($event)"
+          />
+        </label>
+
+
+
+        <!-- <button mat-button type="button" color="primary" component="label">
           <mat-icon>upload</mat-icon> Image
           <input
             type="file"
@@ -132,7 +146,7 @@
             hidden
             (change)="onImageSelect($event)"
           />
-        </button>
+        </button> -->
 
         <!-- Submit dugme -->
         <button mat-raised-button color="accent" type="submit">

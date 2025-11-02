@@ -49,7 +49,7 @@ export class MainComponent implements OnInit {
   filterForm: FormGroup;
   submitForm: FormGroup;
   selectedSubtypes: IncidentSubtype[] = [];
-  selectedImage: File | null = null;
+  selectedImages: File[] = [];
 
   selectedCoordinates: { lat: number; lng: number } | null = null;
 
@@ -186,12 +186,13 @@ export class MainComponent implements OnInit {
     });
   }
 
-  onImageSelect(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      this.selectedImage = input.files[0];
-    }
+onImageSelect(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  if (input.files && input.files.length > 0) {
+    this.selectedImages = Array.from(input.files);
   }
+}
+
 
   async onSubmit(): Promise<void> {
   if (this.submitForm.invalid) {
