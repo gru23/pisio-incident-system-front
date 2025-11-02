@@ -117,17 +117,41 @@ export class ModeratorComponent implements OnInit  {
 
   ngOnInit(): void {
     // Ovdje samo učitavamo podatke, ne diramo mapu
-    this.loadApprovedIncidents();
-    this.loadOtherIncidents();
+    // this.loadApprovedIncidents();
+    // this.loadOtherIncidents();
+    this.loadAllIncidents();
   }
 
    onMapReady(): void {
     console.log('🗺️ Mapa spremna — dodajemo markere.');
 
     // ➕ Prikaži sve incidente na mapi kada je spremna
-    this.mapComponent.updateMarkers(this.approvedIncidents);
-    this.mapComponent.addMarkers(this.otherIncidents);
+    // this.mapComponent.updateMarkers(this.approvedIncidents);
+    // this.mapComponent.addMarkers(this.otherIncidents);
   }
+
+  private loadAllIncidents(): void {
+  const requests = [
+    this.incidentService.getIncidents(IncidentStatus.Approved),
+    this.incidentService.getIncidents(IncidentStatus.Pending),
+    this.incidentService.getIncidents(IncidentStatus.Rejected),
+    this.incidentService.getIncidents(IncidentStatus.Canceled),
+  ];
+
+  forkJoin(requests).subscribe({
+    next: (responses) => {
+      const allIncidents = responses.flatMap(r => r.content);
+      console.log('✅ Svi incidenti učitani:', allIncidents);
+
+      // Kada je mapa spremna, dodaj sve markere
+      if (this.mapComponent) {
+        this.mapComponent.updateMarkers(allIncidents);
+      }
+    },
+    error: (err) => console.error('⛔ Greška pri učitavanju incidenata:', err),
+  });
+}
+
 
 
   private loadApprovedIncidents(): void {
