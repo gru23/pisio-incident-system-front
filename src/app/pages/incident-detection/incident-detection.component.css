@@ -1,0 +1,86 @@
+mat-card-title {
+  padding: 10px;
+  text-align: center;
+}
+
+mat-form-field {
+  min-width: 180px;
+  flex: 1;
+}
+
+hr {
+  width: 98%;
+  height: 1px;
+  background-color: #8ebbff;
+}
+
+.filter-container {
+  margin: 22px;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.radius-field {
+  flex: 1 1 180px;
+}
+
+.date-field {
+  flex: 1 1 200px;
+}
+
+button {
+  height: 46px;
+}
+
+.map-container {
+  margin: 22px;
+}
+
+.emtpy-container {
+  height: 10px;
+}
+
+
+.incident-table-card {
+  background-color: #f9f9f9; /* Pozadina kartice */
+  margin: 20px;
+}
+
+.mat-card-content {
+  padding: 0;
+}
+
+.mat-table {
+  width: 100%;
+  background-color: inherit; /* Nasleđuje pozadinu od mat-card */
+  overflow: auto;
+}
+
+.mat-header-cell, .mat-cell {
+  padding: 16px;
+}
+
+.mat-header-row {
+  background-color: #f0f0f0; /* Za zaglavlje tabele */
+}
+
+.mat-row {
+  background-color: #ffffff; /* Za redove tabele */
+}
+
+.mat-row:hover {
+  background-color: #e0e0e0; /* Hover efekat na redovima */
+}
+
+.no-incidents-message {
+  text-align: center;
+  font-size: 18px;
+  color: #888;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
