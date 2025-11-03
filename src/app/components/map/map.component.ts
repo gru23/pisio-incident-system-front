@@ -34,6 +34,8 @@ export class MapComponent implements OnInit {
   private rejectedIcon: any;
   private pendingIcon: any;
 
+  private radiusCircle: any = null;
+
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
     private moderationService: ModerationService,
@@ -284,6 +286,29 @@ private changeStatus(incident: IncidentModel, newStatus: string): void {
   }
 
   return baseContent; // običan korisnik vidi samo informacije
+}
+
+public showRadius(lat: number, lng: number, radiusInKm: number): void {
+  if (!this.map) return;
+
+  const radiusInMeters = radiusInKm * 1000;
+  const L = (window as any).L;
+
+  // Ukloni prethodni krug ako postoji
+  if (this.radiusCircle) {
+    this.map.removeLayer(this.radiusCircle);
+  }
+
+  // Napravi novi krug
+  this.radiusCircle = L.circle([lat, lng], {
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.2,
+    radius: radiusInMeters // radius u metrima
+  }).addTo(this.map);
+
+  // Opcionalno: zoom da se vidi cijeli krug
+  this.map.fitBounds(this.radiusCircle.getBounds());
 }
 
 

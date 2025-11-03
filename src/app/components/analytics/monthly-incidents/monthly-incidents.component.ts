@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { FormsModule } from '@angular/forms';
 import { AnalyticsService } from '../../../services/analytics/analytics.service';
-import { IncidentPerDayModel } from '../../../models/incident-per-day-model';
+import { IncidentPerDayModel } from '../../../models/analytics/incident-per-day-model';
 import { IncidentType } from '../../../enums';
 
 @Component({

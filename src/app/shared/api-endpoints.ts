@@ -15,3 +15,8 @@ export const API_ANALYTICS_ENDPOINTS = {
   incidentPerDay: (year: number, month: number) => 
     `${API_BASE_URL}/analytics/count-by-month?year=${year}&month=${month}`
 }
+
+export const API_ALERT_ENDPOINTS = {
+  detectionPosition: `${API_BASE_URL}/alert/detection-position`,
+  incidentDetection: `${API_BASE_URL}/alert/incident-detection`,
+}
