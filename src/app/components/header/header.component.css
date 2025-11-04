@@ -9,7 +9,7 @@ a {
     align-items: center;
     justify-content: space-between;
     background-color: #8ebbff;
-    height: 45px;
+    height: 80px; /* Povecano da bi imali vise prostora za navigaciju */
     padding: 30px;
 }
 
@@ -40,4 +40,31 @@ a {
 .header-username {
     font-size: 18px;
     color: aliceblue;
+}
+
+.header-content {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center; /* Centriranje navigacije */
+}
+
+.header-nav {
+    display: flex;
+    gap: 30px; /* Razmak između linkova */
+    align-items: center;
+}
+
+.nav-link {
+    font-size: 18px;
+    font-weight: 500;
+    color: aliceblue;
+    transition: color 0.3s ease; /* Glatki prelaz boje */
+}
+
+.nav-link:hover {
+    color: #f02c00; /* #f0a500 Osvetljenje pri hoveru */
+}
+
+.nav-link:active {
+    color: #c57d00; /* Osvetljenje pri kliku */
 }
