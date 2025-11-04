@@ -11,6 +11,9 @@ import { isPlatformBrowser } from '@angular/common';
 import { IncidentModel } from '../../models/incident-model';
 import { IncidentStatus } from '../../enums';
 import { ModerationService } from '../../services/moderation/moderation.service';
+import { AlertService } from '../../services/alert/alert.service';
+import { AnalyticsService } from '../../services/analytics/analytics.service';
+import { IncidentService } from '../../services/incident/incident.service';
 
 @Component({
   selector: 'app-map',
@@ -38,7 +41,10 @@ export class MapComponent implements OnInit {
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: Object,
+    private incidentService: IncidentService,
     private moderationService: ModerationService,
+    private alertService: AlertService,
+    private analyticsService: AnalyticsService,
   ) {
     this.isBrowser = isPlatformBrowser(this.platformId);
   }
@@ -254,6 +260,36 @@ private changeStatus(incident: IncidentModel, newStatus: string): void {
       });
 
       alert(`✅ Status incidenta #${incident.id} promijenjen u: ${updatedIncident.status}`);
+    },
+    error: (err) => {
+      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
+      alert('Greška pri promjeni statusa!');
+    },
+  });
+
+  this.incidentService.updateStatus(incident.id, parsedStatus).subscribe({
+    next: (updatedIncident) => {
+      console.log('✅ Status ažuriran na backendu:', updatedIncident);
+    },
+    error: (err) => {
+      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
+      alert('Greška pri promjeni statusa!');
+    },
+  });
+
+  this.alertService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
+    next: (updatedIncident) => {
+      console.log('✅ Status ažuriran na backendu:', updatedIncident);
+    },
+    error: (err) => {
+      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
+      alert('Greška pri promjeni statusa!');
+    },
+  });
+
+  this.analyticsService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
+    next: (updatedIncident) => {
+      console.log('✅ Status ažuriran na backendu:', updatedIncident);
     },
     error: (err) => {
       console.error('⛔ Greška pri promjeni statusa incidenta:', err);

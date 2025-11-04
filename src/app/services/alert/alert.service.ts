@@ -6,6 +6,7 @@ import { DetectionPositionRequestDto } from '../../models/requests/detection-pos
 import { IncidentDetectionRequestDto } from '../../models/requests/incident-detection.dto';
 import { DetectionPositionModel } from '../../models/alert/detection-position-model';
 import { IncidentModel } from '../../models/incident-model';
+import { IncidentStatus } from '../../enums';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +14,21 @@ import { IncidentModel } from '../../models/incident-model';
 export class AlertService {
 
   constructor(private http: HttpClient) {}
+
+  submitIncident(incident: IncidentModel): Observable<any> {
+      return this.http.post(API_ALERT_ENDPOINTS.incidents, incident);
+  }
+
+  updateIncidentStatus(id: number, newStatus: IncidentStatus): Observable<IncidentModel> {
+    const url = API_ALERT_ENDPOINTS.updateIncidentStatus(id);
+    const body = { status: newStatus };
+  
+    console.log(`📡 PUT ${url}`, body);
+  
+    return this.http.put<IncidentModel>(url, body, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 
   getDetectionPosition(): Observable<DetectionPositionModel> {
     return this.http.get<DetectionPositionModel>(API_ALERT_ENDPOINTS.detectionPosition);

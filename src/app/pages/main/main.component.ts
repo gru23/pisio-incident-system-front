@@ -22,6 +22,8 @@ import { IncidentModel } from '../../models/incident-model';
 import { HttpClient } from '@angular/common/http';
 import { IncidentService } from '../../services/incident/incident.service';
 import { FilterRequestDto } from '../../models/requests/filter-request.dto';
+import { AlertService } from '../../services/alert/alert.service';
+import { AnalyticsService } from '../../services/analytics/analytics.service';
 
 @Component({
   selector: 'app-main',
@@ -108,6 +110,8 @@ export class MainComponent implements OnInit {
     private fb: FormBuilder,
     private http: HttpClient,
     private incidentService: IncidentService,
+    private alertService: AlertService,
+    private analyticsService: AnalyticsService,
   ) {
     this.filterForm = this.fb.group({
       type: [''],
@@ -129,17 +133,17 @@ export class MainComponent implements OnInit {
   }
 
   loadApprovedIncidents(): void {
-      this.incidentService.getIncidents('APPROVED').subscribe({
-        next: (data) => {
-          this.approvedIncidents = data.content;  // Ako koristiš paginaciju, ovo je obično lista u 'content'
-          this.mapComponent.updateMarkers(this.approvedIncidents);
-          console.log('✅ Incidents with status APPROVED:', this.approvedIncidents);
-        },
-        error: (err) => {
-          console.error('⛔ Error loading approved incidents:', err);
-        }
-      });
-    }
+    this.incidentService.getIncidents('APPROVED').subscribe({
+      next: (data) => {
+        this.approvedIncidents = data.content;  // Ako koristiš paginaciju, ovo je obično lista u 'content'
+        this.mapComponent.updateMarkers(this.approvedIncidents);
+        console.log('✅ Incidents with status APPROVED:', this.approvedIncidents);
+      },
+      error: (err) => {
+        console.error('⛔ Error loading approved incidents:', err);
+      }
+    });
+  }
 
   onTypeChange(context: 'filter' | 'submit'): void {
     const form = context === 'filter' ? this.filterForm : this.submitForm;
@@ -186,79 +190,97 @@ export class MainComponent implements OnInit {
     });
   }
 
-onImageSelect(event: Event): void {
-  const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
-    this.selectedImages = Array.from(input.files);
+  onImageSelect(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.selectedImages = Array.from(input.files);
+    }
   }
-}
 
 
   async onSubmit(): Promise<void> {
-  if (this.submitForm.invalid) {
-    this.submitForm.markAllAsTouched();
-    console.warn('⛔ Forma nije validna.');
-    return;
-  }
-
-  const formValue = this.submitForm.value;
-  const address = formValue.address?.trim();
-
-  let coords: { lat: number; lng: number } | null = null;
-
-  // 🟢 Uvijek pokušaj koristiti adresu iz forme
-  if (address) {
-    coords = await this.geocodeAddress(address);
-
-    if (!coords) {
-      console.warn('⛔ Neuspješno geokodiranje unijete adrese.');
+    if (this.submitForm.invalid) {
+      this.submitForm.markAllAsTouched();
+      console.warn('⛔ Forma nije validna.');
       return;
     }
-  } else if (this.selectedCoordinates) {
-    // ⚠️ Ako nema adrese, koristi marker sa mape
-    coords = this.selectedCoordinates;
-  } else {
-    console.warn('⛔ Nema ni adrese ni koordinata.');
-    return;
+
+    const formValue = this.submitForm.value;
+    const address = formValue.address?.trim();
+
+    let coords: { lat: number; lng: number } | null = null;
+
+    // 🟢 Uvijek pokušaj koristiti adresu iz forme
+    if (address) {
+      coords = await this.geocodeAddress(address);
+
+      if (!coords) {
+        console.warn('⛔ Neuspješno geokodiranje unijete adrese.');
+        return;
+      }
+    } else if (this.selectedCoordinates) {
+      // ⚠️ Ako nema adrese, koristi marker sa mape
+      coords = this.selectedCoordinates;
+    } else {
+      console.warn('⛔ Nema ni adrese ni koordinata.');
+      return;
+    }
+
+    const { lat, lng } = coords;
+
+    const reverseGeocoded = await this.reverseGeocode(lat, lng);
+    if (!reverseGeocoded) {
+      console.warn('⛔ Neuspješan reverse geocoding.');
+      return;
+    }
+
+    const location: LocationModel = {
+      latitude: Number(lat.toPrecision(6)),
+      longitude: Number(lng.toPrecision(6)),
+      ...reverseGeocoded,
+    };
+
+    const incident: IncidentModel = {
+      type: formValue.type,
+      subtype: formValue.subtype === '' ? null : formValue.subtype,
+      location,
+      description: formValue.description,
+      images: [],
+      status: IncidentStatus.Pending
+    };
+
+    console.log('✅ Incident za slanje:', incident);
+
+    this.incidentService.submitIncident(incident).subscribe({
+      next: (response) => {
+        this.mapComponent.removeCurrentMarker();
+        this.submitForm.reset();
+        this.selectedCoordinates = null;
+        console.log('✅ Incident uspješno poslan:', response);
+      },
+      error: (err) => {
+        console.error('⛔ Greška prilikom slanja incidenta:', err);
+      },
+    });
+
+    this.alertService.submitIncident(incident).subscribe({
+      next: (response) => {
+        console.log('✅ Incident uspješno poslan:', response);
+      },
+      error: (err) => {
+        console.error('⛔ Greška prilikom slanja incidenta alert-u:', err);
+      },
+    });
+
+    this.analyticsService.submitIncident(incident).subscribe({
+      next: (response) => {
+        console.log('✅ Incident uspješno poslan:', response);
+      },
+      error: (err) => {
+        console.error('⛔ Greška prilikom slanja incidenta analytics-u:', err);
+      },
+    });
   }
-
-  const { lat, lng } = coords;
-
-  const reverseGeocoded = await this.reverseGeocode(lat, lng);
-  if (!reverseGeocoded) {
-    console.warn('⛔ Neuspješan reverse geocoding.');
-    return;
-  }
-
-  const location: LocationModel = {
-    latitude: Number(lat.toPrecision(6)),
-    longitude: Number(lng.toPrecision(6)),
-    ...reverseGeocoded,
-  };
-
-  const incident: IncidentModel = {
-    type: formValue.type,
-    subtype: formValue.subtype === '' ? null : formValue.subtype,
-    location,
-    description: formValue.description,
-    images: [],
-    status: IncidentStatus.Pending
-  };
-
-  console.log('✅ Incident za slanje:', incident);
-
-  this.incidentService.submitIncident(incident).subscribe({
-    next: (response) => {
-      this.mapComponent.removeCurrentMarker();
-      this.submitForm.reset();
-      this.selectedCoordinates = null;
-      console.log('✅ Incident uspješno poslan:', response);
-    },
-    error: (err) => {
-      console.error('⛔ Greška prilikom slanja incidenta:', err);
-    },
-  });
-}
 
 
 

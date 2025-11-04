@@ -4,6 +4,7 @@ import { IncidentModel } from '../../models/incident-model';
 import { Observable } from 'rxjs';
 import { API_INCIDENT_ENDPOINTS } from '../../shared/api-endpoints';
 import { FilterRequestDto } from '../../models/requests/filter-request.dto';
+import { IncidentStatus } from '../../enums';
 
 export interface Page<T> {
   content: T[];
@@ -41,5 +42,16 @@ export class IncidentService {
   ): Observable<Page<IncidentModel>> {
 
     return this.http.post<Page<IncidentModel>>(API_INCIDENT_ENDPOINTS.filter, filter);
+  }
+
+  updateStatus(id: number, newStatus: IncidentStatus): Observable<IncidentModel> {
+    const url = API_INCIDENT_ENDPOINTS.updateStatus(id);
+    const body = { status: newStatus };
+  
+    console.log(`📡 PUT ${url}`, body);
+  
+    return this.http.put<IncidentModel>(url, body, {
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
