@@ -59,6 +59,7 @@ a {
     font-weight: 500;
     color: aliceblue;
     transition: color 0.3s ease; /* Glatki prelaz boje */
+    cursor: pointer;
 }
 
 .nav-link:hover {
@@ -67,4 +68,15 @@ a {
 
 .nav-link:active {
     color: #c57d00; /* Osvetljenje pri kliku */
+}
+
+.user-email {
+    font-weight: bold;
+}
+
+.username-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
 }

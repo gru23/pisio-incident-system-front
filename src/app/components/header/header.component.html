@@ -5,7 +5,7 @@
             <a href="/main">Incident<br />Management<br />System</a>
         </div>
     </div>
-    <div class="header-content">
+    <div class="header-content" *ngIf="userEmail">
         <nav class="header-nav">
             <a href="/main" class="nav-link">Main</a>
             <a href="/moderator" class="nav-link">Moderator Page</a>
@@ -14,6 +14,17 @@
         </nav>
     </div>
     <div class="header-username">
-        <a class="nav-link" href="http://localhost:8083/oauth2/authorization/google">Login</a>
+        <!-- <a class="nav-link" href="http://localhost:8083/oauth2/authorization/google">Login</a> -->
+        <ng-container *ngIf="userEmail; else loginBlock">
+            <!-- <a class="nav-link">{{ userEmail }}</a> -->
+             <div class="username-container">
+                <span class="user-email">{{ userEmail }}</span>
+                <a class="nav-link" (click)="logout()">Log out</a>
+            </div>
+        </ng-container>
+
+        <ng-template #loginBlock>
+            <a class="nav-link" (click)="login()">Login</a>
+        </ng-template>
     </div>
 </div>

@@ -25,3 +25,9 @@ export const API_ALERT_ENDPOINTS = {
   incidents: `${API_BASE_URL}/alert/incidents`,
   updateIncidentStatus: (id: number) => `${API_BASE_URL}/alert/incidents/${id}/status`,
 }
+
+export const API_AUTH_ENDPOINTS = {
+  login: "http://localhost:8080/oauth2/authorization/google",
+  logout: `${API_BASE_URL}/auth/logout`,
+  loadUser: `${API_BASE_URL}/auth/user`,
+}
