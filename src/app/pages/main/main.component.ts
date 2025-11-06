@@ -197,6 +197,26 @@ export class MainComponent implements OnInit {
     }
   }
 
+  uploadImages(): Promise<string[]> {
+  if (!this.selectedImages || this.selectedImages.length === 0) {
+    return Promise.resolve([]); // uvijek vraćamo niz
+  }
+
+  const formData = new FormData();
+  this.selectedImages.forEach(file => formData.append('file', file));
+
+  return this.incidentService.uploadImages(formData)
+    .toPromise()
+    .then((response) => {
+      return response || []; // ako je response undefined, vrati prazni niz
+    })
+    .catch((error) => {
+      console.error('⛔ Greška pri uploadu slika:', error);
+      return []; // također vraćamo niz
+    });
+}
+
+
 
   async onSubmit(): Promise<void> {
     if (this.submitForm.invalid) {
@@ -240,12 +260,14 @@ export class MainComponent implements OnInit {
       ...reverseGeocoded,
     };
 
+    const uploadedPaths = await this.uploadImages();
+
     const incident: IncidentModel = {
       type: formValue.type,
       subtype: formValue.subtype === '' ? null : formValue.subtype,
       location,
       description: formValue.description,
-      images: [],
+      images: uploadedPaths.map(path => ({ imageUrl: path })),
       status: IncidentStatus.Pending
     };
 

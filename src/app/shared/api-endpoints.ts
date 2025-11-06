@@ -4,6 +4,7 @@ export const API_INCIDENT_ENDPOINTS = {
   incidents: `${API_BASE_URL}/incidents`,
   filter: `${API_BASE_URL}/incidents/filter`,
   updateStatus: (id: number) => `${API_BASE_URL}/incidents/${id}/status`,
+  uploadImages: `${API_BASE_URL}/incidents/upload`,
 };
 
 export const API_MODERATION_ENDPOINTS = {

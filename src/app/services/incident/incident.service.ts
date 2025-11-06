@@ -24,6 +24,10 @@ export class IncidentService {
     return this.http.post(API_INCIDENT_ENDPOINTS.incidents, incident);
   }
 
+  uploadImages(formData: FormData): Observable<string[]> {
+    return this.http.post<string[]>(API_INCIDENT_ENDPOINTS.uploadImages, formData);
+  }
+
   getIncidents(status?: string, page: number = 0, size: number = 100): Observable<any> {
     let params = new HttpParams()
       .set('page', page.toString())
