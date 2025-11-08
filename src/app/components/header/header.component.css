@@ -9,7 +9,7 @@ a {
     align-items: center;
     justify-content: space-between;
     background-color: #8ebbff;
-    height: 80px; /* Povecano da bi imali vise prostora za navigaciju */
+    height: 80px;
     padding: 30px;
 }
 
@@ -45,12 +45,12 @@ a {
 .header-content {
     display: flex;
     flex-grow: 1;
-    justify-content: center; /* Centriranje navigacije */
+    justify-content: center;
 }
 
 .header-nav {
     display: flex;
-    gap: 30px; /* Razmak između linkova */
+    gap: 30px;
     align-items: center;
 }
 
@@ -58,16 +58,16 @@ a {
     font-size: 18px;
     font-weight: 500;
     color: aliceblue;
-    transition: color 0.3s ease; /* Glatki prelaz boje */
+    transition: color 0.3s ease;
     cursor: pointer;
 }
 
 .nav-link:hover {
-    color: #f02c00; /* #f0a500 Osvetljenje pri hoveru */
+    color: #f02c00;
 }
 
 .nav-link:active {
-    color: #c57d00; /* Osvetljenje pri kliku */
+    color: #c57d00;
 }
 
 .user-email {

@@ -23,7 +23,7 @@ export class AlertService {
     const url = API_ALERT_ENDPOINTS.updateIncidentStatus(id);
     const body = { status: newStatus };
   
-    console.log(`📡 PUT ${url}`, body);
+    console.log(`PUT ${url}`, body);
   
     return this.http.put<IncidentModel>(url, body, {
       headers: { 'Content-Type': 'application/json' }

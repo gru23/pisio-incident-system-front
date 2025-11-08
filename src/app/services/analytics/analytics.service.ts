@@ -20,7 +20,7 @@ export class AnalyticsService {
       const url = API_ANALYTICS_ENDPOINTS.updateIncidentStatus(id);
       const body = { status: newStatus };
     
-      console.log(`📡 PUT ${url}`, body);
+      console.log(`PUT ${url}`, body);
     
       return this.http.put<IncidentModel>(url, body, {
         headers: { 'Content-Type': 'application/json' }

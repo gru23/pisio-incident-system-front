@@ -135,12 +135,12 @@ export class MainComponent implements OnInit {
   loadApprovedIncidents(): void {
     this.incidentService.getIncidents('APPROVED').subscribe({
       next: (data) => {
-        this.approvedIncidents = data.content;  // Ako koristiš paginaciju, ovo je obično lista u 'content'
+        this.approvedIncidents = data.content;
         this.mapComponent.updateMarkers(this.approvedIncidents);
-        console.log('✅ Incidents with status APPROVED:', this.approvedIncidents);
+        console.log('Incidents with status APPROVED:', this.approvedIncidents);
       },
       error: (err) => {
-        console.error('⛔ Error loading approved incidents:', err);
+        console.error('Error loading approved incidents:', err);
       }
     });
   }
@@ -181,11 +181,10 @@ export class MainComponent implements OnInit {
       next: (page) => {
         this.approvedIncidents = page.content;
         this.mapComponent.updateMarkers(this.approvedIncidents);
-        // Emitiraj event ili postavi te incidente na mapu
-        console.log('Filtrirani incidenti:', this.approvedIncidents);
+        console.log('Filtered incidents:', this.approvedIncidents);
       },
       error: (error) => {
-        console.error('Greška pri filtriranju incidenata:', error);
+        console.error('Error filtering incidents:', error);
       }
     });
   }
@@ -198,30 +197,30 @@ export class MainComponent implements OnInit {
   }
 
   uploadImages(): Promise<string[]> {
-  if (!this.selectedImages || this.selectedImages.length === 0) {
-    return Promise.resolve([]); // uvijek vraćamo niz
+    if (!this.selectedImages || this.selectedImages.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    const formData = new FormData();
+    this.selectedImages.forEach(file => formData.append('file', file));
+
+    return this.incidentService.uploadImages(formData)
+      .toPromise()
+      .then((response) => {
+        return response || [];
+      })
+      .catch((error) => {
+        console.error('Error uploading image:', error);
+        return [];
+      });
   }
-
-  const formData = new FormData();
-  this.selectedImages.forEach(file => formData.append('file', file));
-
-  return this.incidentService.uploadImages(formData)
-    .toPromise()
-    .then((response) => {
-      return response || []; // ako je response undefined, vrati prazni niz
-    })
-    .catch((error) => {
-      console.error('⛔ Greška pri uploadu slika:', error);
-      return []; // također vraćamo niz
-    });
-}
 
 
 
   async onSubmit(): Promise<void> {
     if (this.submitForm.invalid) {
       this.submitForm.markAllAsTouched();
-      console.warn('⛔ Forma nije validna.');
+      console.warn('Form not valid.');
       return;
     }
 
@@ -230,19 +229,17 @@ export class MainComponent implements OnInit {
 
     let coords: { lat: number; lng: number } | null = null;
 
-    // 🟢 Uvijek pokušaj koristiti adresu iz forme
     if (address) {
       coords = await this.geocodeAddress(address);
 
       if (!coords) {
-        console.warn('⛔ Neuspješno geokodiranje unijete adrese.');
+        console.warn('Unsucessful geocoding of entered address.');
         return;
       }
     } else if (this.selectedCoordinates) {
-      // ⚠️ Ako nema adrese, koristi marker sa mape
       coords = this.selectedCoordinates;
     } else {
-      console.warn('⛔ Nema ni adrese ni koordinata.');
+      console.warn('No address, no coordinates.');
       return;
     }
 
@@ -250,7 +247,7 @@ export class MainComponent implements OnInit {
 
     const reverseGeocoded = await this.reverseGeocode(lat, lng);
     if (!reverseGeocoded) {
-      console.warn('⛔ Neuspješan reverse geocoding.');
+      console.warn('Unsucessful reverse geocoding.');
       return;
     }
 
@@ -271,35 +268,35 @@ export class MainComponent implements OnInit {
       status: IncidentStatus.Pending
     };
 
-    console.log('✅ Incident za slanje:', incident);
+    console.log('Sending incident:', incident);
 
     this.incidentService.submitIncident(incident).subscribe({
       next: (response) => {
         this.mapComponent.removeCurrentMarker();
         this.submitForm.reset();
         this.selectedCoordinates = null;
-        console.log('✅ Incident uspješno poslan:', response);
+        console.log('Incident sent:', response);
       },
       error: (err) => {
-        console.error('⛔ Greška prilikom slanja incidenta:', err);
+        console.error('Error sending incident:', err);
       },
     });
 
     this.alertService.submitIncident(incident).subscribe({
       next: (response) => {
-        console.log('✅ Incident uspješno poslan:', response);
+        console.log('Incident sent:', response);
       },
       error: (err) => {
-        console.error('⛔ Greška prilikom slanja incidenta alert-u:', err);
+        console.error('Error sending incident alert:', err);
       },
     });
 
     this.analyticsService.submitIncident(incident).subscribe({
       next: (response) => {
-        console.log('✅ Incident uspješno poslan:', response);
+        console.log('Incident sent:', response);
       },
       error: (err) => {
-        console.error('⛔ Greška prilikom slanja incidenta analytics-u:', err);
+        console.error('Error sending incident analytics:', err);
       },
     });
   }
@@ -308,19 +305,18 @@ export class MainComponent implements OnInit {
 
   onMapLocationSelected(coords: { lat: number; lng: number }) {
     this.selectedCoordinates = coords;
-    console.log('📍 Odabrana lokacija:', coords);
+    console.log('Selected location:', coords);
 
     this.reverseGeocode(coords.lat, coords.lng)
       .then((address) => {
-        console.log('📬 Reverse geocoding podaci:', address);
+        console.log('Reverse geocoding data:', address);
         this.reverseGeocodedAddress = address;
 
-        // 👉 Formatiraj adresu za prikaz u formi
         const formatted = address.address;
         this.submitForm.get('address')?.setValue(formatted);
       })
       .catch((error) => {
-        console.error('⛔ Reverse geocoding greška:', error);
+        console.error('Reverse geocoding error:', error);
       });
   }
 
@@ -372,7 +368,7 @@ export class MainComponent implements OnInit {
 
       return null;
     } catch (error) {
-      console.error('⛔ Greška prilikom geokodiranja adrese:', error);
+      console.error('Geocoding address error:', error);
       return null;
     }
   }

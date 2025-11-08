@@ -24,9 +24,9 @@ import { IncidentService } from '../../services/incident/incident.service';
 })
 export class MapComponent implements OnInit {
   @Input() incidents: IncidentModel[] = [];
-  @Input() isModerator: boolean = false; // default false
+  @Input() isModerator: boolean = false;
   @Output() locationSelected = new EventEmitter<{ lat: number; lng: number }>();
-  @Output() mapReady = new EventEmitter<void>(); // 👈 novi event
+  @Output() mapReady = new EventEmitter<void>();
 
   private isBrowser: boolean;
   private map: any;
@@ -55,7 +55,6 @@ export class MapComponent implements OnInit {
     const L = await import('leaflet');
     (window as any).L = L;
 
-    // 🔹 Definicija ikonica
     this.approvedIcon = L.icon({
       iconUrl: 'assets/leaflet/approved_marker_32.png',
       iconRetinaUrl: 'assets/leaflet/approved_marker_64.png',
@@ -111,17 +110,14 @@ export class MapComponent implements OnInit {
       shadowSize: [32, 32]
     });
 
-    // 🗺️ Inicijalizacija mape
     this.map = L.map('map').setView([44.284536, 18.0626781], 8);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(this.map);
 
-    // ➕ Dodaj početne incidente
     this.addIncidentMarkers(this.incidents);
 
-    // 📍 Klik na mapu — dodavanje trenutnog markera
     this.map.on('click', (e: any) => {
       const { lat, lng } = e.latlng;
 
@@ -134,10 +130,9 @@ export class MapComponent implements OnInit {
       this.locationSelected.emit({ lat, lng });
     });
 
-    // ⏳ Kada je mapa spremna, javi parent komponenti
     setTimeout(() => {
       this.map.invalidateSize();
-      this.mapReady.emit(); // 👈 Ovdje javljamo moderatoru da je mapa spremna
+      this.mapReady.emit();
     }, 0);
   }
 
@@ -155,13 +150,9 @@ export class MapComponent implements OnInit {
     this.addIncidentMarkers(incidents);
   }
 
-  
-
-
-
   async addMarkers(incidents: IncidentModel[]) {
     if (!this.map) {
-      console.warn('🕓 Mapa još nije spremna za markere.');
+      console.warn('Map is not ready for markers.');
       return;
     }
 
@@ -172,19 +163,19 @@ export class MapComponent implements OnInit {
       const icon = this.getMarkerIcon(incident.status);
 
       L.marker([latitude, longitude], { icon })
-  .addTo(this.map)
-  .bindPopup(this.buildPopupContent(incident))
-  .on('popupopen', () => {
-    const select = document.getElementById(`status-select-${incident.id}`) as HTMLSelectElement;
-    const button = document.getElementById(`submit-status-${incident.id}`) as HTMLButtonElement;
+        .addTo(this.map)
+        .bindPopup(this.buildPopupContent(incident))
+        .on('popupopen', () => {
+          const select = document.getElementById(`status-select-${incident.id}`) as HTMLSelectElement;
+          const button = document.getElementById(`submit-status-${incident.id}`) as HTMLButtonElement;
 
-    if (button && select) {
-      button.addEventListener('click', () => {
-        const selectedStatus = select.value;
-        this.changeStatus(incident, selectedStatus);
-      });
-    }
-  });
+          if (button && select) {
+            button.addEventListener('click', () => {
+              const selectedStatus = select.value;
+              this.changeStatus(incident, selectedStatus);
+            });
+          }
+        });
 
     });
   }
@@ -208,107 +199,103 @@ export class MapComponent implements OnInit {
       this.currentMarker = null;
     }
   }
-  
+
   private addIncidentMarkers(incidents: IncidentModel[]): void {
-  const L = (window as any).L;
+    const L = (window as any).L;
 
-  incidents.forEach((incident) => {
-    const { latitude, longitude } = incident.location;
-    const marker = L.marker([latitude, longitude], { icon: this.getMarkerIcon(incident.status) }).addTo(this.map);
+    incidents.forEach((incident) => {
+      const { latitude, longitude } = incident.location;
+      const marker = L.marker([latitude, longitude], { icon: this.getMarkerIcon(incident.status) }).addTo(this.map);
 
-    // Čuvamo incidentId u marker-u
-    (marker as any).incidentId = incident.id;
+      (marker as any).incidentId = incident.id;
 
-    const popupContent = this.buildPopupContent(incident);
-    marker.bindPopup(popupContent);
+      const popupContent = this.buildPopupContent(incident);
+      marker.bindPopup(popupContent);
 
-    // 🧠 Kada se popup otvori, dodaj event listener sa once: true
-    marker.on('popupopen', () => {
-      if(!this.isModerator) return;
-      
-      const selectEl = document.getElementById(`status-select-${incident.id}`) as HTMLSelectElement;
-      const submitBtn = document.getElementById(`submit-status-${incident.id}`) as HTMLButtonElement;
+      marker.on('popupopen', () => {
+        if (!this.isModerator) return;
 
-      submitBtn?.addEventListener('click', () => {
-        if (selectEl) {
-          const newStatus = selectEl.value;
-          this.changeStatus(incident, newStatus);
-        }
-      }, { once: true }); // <-- listener se aktivira samo jednom po popupu
-    });
-  });
-}
+        const selectEl = document.getElementById(`status-select-${incident.id}`) as HTMLSelectElement;
+        const submitBtn = document.getElementById(`submit-status-${incident.id}`) as HTMLButtonElement;
 
-private changeStatus(incident: IncidentModel, newStatus: string): void {
-  if(!incident.id) return;
-
-  const parsedStatus = newStatus as IncidentStatus;
-
-  this.moderationService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
-    next: (updatedIncident) => {
-      console.log('✅ Status ažuriran na backendu:', updatedIncident);
-
-      // 🔄 Ažuriraj lokalni status incidenta
-      incident.status = updatedIncident.status;
-
-      // 📍 Pronađi marker po incidentId, a ne po lat/lng
-      this.map.eachLayer((layer: any) => {
-        if (layer instanceof (window as any).L.Marker && layer.incidentId === incident.id) {
-          layer.setIcon(this.getMarkerIcon(updatedIncident.status));
-          layer.bindPopup(this.buildPopupContent(incident));
-        }
+        submitBtn?.addEventListener('click', () => {
+          if (selectEl) {
+            const newStatus = selectEl.value;
+            this.changeStatus(incident, newStatus);
+          }
+        }, { once: true });
       });
+    });
+  }
 
-      alert(`✅ Status incidenta #${incident.id} promijenjen u: ${updatedIncident.status}`);
-    },
-    error: (err) => {
-      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
-      alert('Greška pri promjeni statusa!');
-    },
-  });
+  private changeStatus(incident: IncidentModel, newStatus: string): void {
+    if (!incident.id) return;
 
-  this.incidentService.updateStatus(incident.id, parsedStatus).subscribe({
-    next: (updatedIncident) => {
-      console.log('✅ Status ažuriran na backendu:', updatedIncident);
-    },
-    error: (err) => {
-      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
-      alert('Greška pri promjeni statusa!');
-    },
-  });
+    const parsedStatus = newStatus as IncidentStatus;
 
-  this.alertService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
-    next: (updatedIncident) => {
-      console.log('✅ Status ažuriran na backendu:', updatedIncident);
-    },
-    error: (err) => {
-      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
-      alert('Greška pri promjeni statusa!');
-    },
-  });
+    this.moderationService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
+      next: (updatedIncident) => {
+        console.log('Status updated:', updatedIncident);
 
-  this.analyticsService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
-    next: (updatedIncident) => {
-      console.log('✅ Status ažuriran na backendu:', updatedIncident);
-    },
-    error: (err) => {
-      console.error('⛔ Greška pri promjeni statusa incidenta:', err);
-      alert('Greška pri promjeni statusa!');
-    },
-  });
-}
+        incident.status = updatedIncident.status;
+
+        this.map.eachLayer((layer: any) => {
+          if (layer instanceof (window as any).L.Marker && layer.incidentId === incident.id) {
+            layer.setIcon(this.getMarkerIcon(updatedIncident.status));
+            layer.bindPopup(this.buildPopupContent(incident));
+          }
+        });
+
+        alert(`Incident status #${incident.id} changed to: ${updatedIncident.status}`);
+      },
+      error: (err) => {
+        console.error('Changing incident status error:', err);
+        alert('Error while changing status!');
+      },
+    });
+
+    this.incidentService.updateStatus(incident.id, parsedStatus).subscribe({
+      next: (updatedIncident) => {
+        console.log('Status update:', updatedIncident);
+      },
+      error: (err) => {
+        console.error('Changing incident status error:', err);
+        alert('Error while changing status!');
+      },
+    });
+
+    this.alertService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
+      next: (updatedIncident) => {
+        console.log('Changing incident status error:', updatedIncident);
+      },
+      error: (err) => {
+        console.error('Changing incident status error:', err);
+        alert('Error while changing status!');
+      },
+    });
+
+    this.analyticsService.updateIncidentStatus(incident.id, parsedStatus).subscribe({
+      next: (updatedIncident) => {
+        console.log('Changing incident status error:', updatedIncident);
+      },
+      error: (err) => {
+        console.error('Changing incident status error:', err);
+        alert('Error while changing status!');
+      },
+    });
+  }
 
 
   private buildPopupContent(incident: IncidentModel): string {
-  const baseContent = `
+    const baseContent = `
     <h3>${incident.status}</h3>
     <b>${incident.type}</b><br/>
     <b>Description:</b> ${incident.description}<br/>
     <b>Address:</b> ${incident.location.address}<br/>
   `;
 
-  if (this.isModerator) {
-    return baseContent + `
+    if (this.isModerator) {
+      return baseContent + `
       <hr/>
       <label for="status-select-${incident.id}">Change status:</label>
       <select id="status-select-${incident.id}">
@@ -319,33 +306,28 @@ private changeStatus(incident: IncidentModel, newStatus: string): void {
       </select>
       <button id="submit-status-${incident.id}" style="margin-top:4px;">Submit</button>
     `;
+    }
+
+    return baseContent;
   }
 
-  return baseContent; // običan korisnik vidi samo informacije
-}
+  public showRadius(lat: number, lng: number, radiusInKm: number): void {
+    if (!this.map) return;
 
-public showRadius(lat: number, lng: number, radiusInKm: number): void {
-  if (!this.map) return;
+    const radiusInMeters = radiusInKm * 1000;
+    const L = (window as any).L;
 
-  const radiusInMeters = radiusInKm * 1000;
-  const L = (window as any).L;
+    if (this.radiusCircle) {
+      this.map.removeLayer(this.radiusCircle);
+    }
 
-  // Ukloni prethodni krug ako postoji
-  if (this.radiusCircle) {
-    this.map.removeLayer(this.radiusCircle);
+    this.radiusCircle = L.circle([lat, lng], {
+      color: 'red',
+      fillColor: '#f03',
+      fillOpacity: 0.2,
+      radius: radiusInMeters
+    }).addTo(this.map);
+
+    this.map.fitBounds(this.radiusCircle.getBounds());
   }
-
-  // Napravi novi krug
-  this.radiusCircle = L.circle([lat, lng], {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.2,
-    radius: radiusInMeters // radius u metrima
-  }).addTo(this.map);
-
-  // Opcionalno: zoom da se vidi cijeli krug
-  this.map.fitBounds(this.radiusCircle.getBounds());
-}
-
-
 }

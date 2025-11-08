@@ -36,13 +36,13 @@ import { IncidentDetectionRequestDto } from '../../models/requests/incident-dete
   templateUrl: './incident-detection.component.html',
   styleUrls: ['./incident-detection.component.css']
 })
-export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
+export class IncidentDetectionComponent implements OnInit, AfterViewInit {
   @ViewChild(MapComponent) mapComponent!: MapComponent;
 
   detectionForm: FormGroup;
   detectionPosition?: DetectionPositionModel;
 
-  incidents: IncidentModel[] = []; // ili puni sa backend-a
+  incidents: IncidentModel[] = [];
   displayedColumns: string[] = ['type', 'subtype', 'description', 'address', 'city', 'country'];
   dataSource = new MatTableDataSource<IncidentModel>(this.incidents);
 
@@ -60,7 +60,6 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
     this.loadDetectionPosition();
     // this.loadIncidents();
 
-    // Osluškuj promjene radius-a i update kruga na mapi
     this.detectionForm.get('radius')?.valueChanges.subscribe((newRadius) => {
       if (this.detectionPosition?.latitude && this.detectionPosition?.longitude) {
         this.mapComponent.showRadius(
@@ -73,7 +72,6 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
   }
 
   ngAfterViewInit(): void {
-    // Kada je mapa inicijalizovana, nacrtaj krug ako imamo detectionPosition
     if (this.detectionPosition) {
       this.mapComponent.showRadius(
         this.detectionPosition.latitude,
@@ -101,7 +99,7 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
   }
 
   loadIncidents() {
-    if (!this.detectionPosition) return; // čekamo da detectionPosition bude učitana
+    if (!this.detectionPosition) return;
 
     const requestDto: IncidentDetectionRequestDto = {
       centerLatitude: this.detectionPosition.latitude,
@@ -120,7 +118,6 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
   }
 
   onMapClick(coords: { lat: number; lng: number }) {
-    // Ažuriramo detectionPosition sa novim koordinatama
     if (!this.detectionPosition) {
       this.detectionPosition = {
         latitude: coords.lat,
@@ -133,9 +130,8 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
       this.detectionPosition.longitude = coords.lng;
     }
 
-    console.log('📍 Nova lokacija:', this.detectionPosition);
+    console.log('New location:', this.detectionPosition);
 
-    // Prikaži crveni krug prema novoj lokaciji
     if (this.mapComponent && this.detectionPosition.radius) {
       this.mapComponent.showRadius(
         coords.lat,
@@ -150,7 +146,6 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
 
     const formValue = this.detectionForm.value;
 
-    // Napravimo payload koristeći vrijednosti iz forme i trenutne koordinate
     const payload: DetectionPositionModel = {
       latitude: this.detectionPosition.latitude,
       longitude: this.detectionPosition.longitude,
@@ -158,15 +153,13 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
       period: formValue.date.toISOString()
     };
 
-    console.log('📡 Sending payload:', payload);
+    console.log('Sending payload:', payload);
 
     this.alertService.updateDetectionPosition(payload).subscribe({
       next: (updated) => {
-        // Ažuriramo lokalni objekat nakon uspješnog POST-a
         this.detectionPosition = updated;
-        console.log('✅ Detection position updated:', updated);
+        console.log('Detection position updated:', updated);
 
-        // Prikaz crvenog kruga na mapi prema novim podacima
         if (this.mapComponent) {
           this.mapComponent.showRadius(
             updated.latitude,
@@ -176,19 +169,19 @@ export class IncidentDetectionComponent implements OnInit, AfterViewInit  {
         }
       },
       error: (err) => {
-        console.error('❌ Error updating detection position:', err);
+        console.error('Error updating detection position:', err);
       }
     });
   }
 
   onMapReady() {
-  if (this.detectionPosition) {
-    this.mapComponent.showRadius(
-      this.detectionPosition.latitude,
-      this.detectionPosition.longitude,
-      this.detectionPosition.radius
-    );
+    if (this.detectionPosition) {
+      this.mapComponent.showRadius(
+        this.detectionPosition.latitude,
+        this.detectionPosition.longitude,
+        this.detectionPosition.radius
+      );
+    }
   }
-}
 
 }

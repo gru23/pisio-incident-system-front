@@ -20,7 +20,6 @@ interface CityIncidentCount {
 export class IncidentsByCityComponent implements OnInit {
   barChartType: ChartType = 'bar';
 
-  // 🔧 Opcije grafa
   barChartOptions: ChartConfiguration['options'] = {
     responsive: true,
     plugins: {
@@ -30,11 +29,10 @@ export class IncidentsByCityComponent implements OnInit {
       y: {
         beginAtZero: true,
         ticks: {
-          // 👇 sprječava polovine (npr. 0.5, 1.5)
           stepSize: 1,
           precision: 0,
           callback: function(value) {
-            return Number(value).toFixed(0); // samo cijeli brojevi
+            return Number(value).toFixed(0);
           }
         }
       }

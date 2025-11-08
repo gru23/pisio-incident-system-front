@@ -47,7 +47,7 @@ button {
 
 
 .incident-table-card {
-  background-color: #f9f9f9; /* Pozadina kartice */
+  background-color: #f9f9f9;
   margin: 20px;
 }
 
@@ -57,7 +57,7 @@ button {
 
 .mat-table {
   width: 100%;
-  background-color: inherit; /* Nasleđuje pozadinu od mat-card */
+  background-color: inherit;
   overflow: auto;
 }
 
@@ -66,15 +66,15 @@ button {
 }
 
 .mat-header-row {
-  background-color: #f0f0f0; /* Za zaglavlje tabele */
+  background-color: #f0f0f0;
 }
 
 .mat-row {
-  background-color: #ffffff; /* Za redove tabele */
+  background-color: #ffffff;
 }
 
 .mat-row:hover {
-  background-color: #e0e0e0; /* Hover efekat na redovima */
+  background-color: #e0e0e0;
 }
 
 .no-incidents-message {

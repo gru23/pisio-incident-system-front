@@ -32,7 +32,7 @@ import { forkJoin } from 'rxjs';
   templateUrl: './moderator.component.html',
   styleUrl: './moderator.component.css'
 })
-export class ModeratorComponent implements OnInit  {
+export class ModeratorComponent implements OnInit {
   @ViewChild(MapComponent) mapComponent!: MapComponent;
 
 
@@ -116,82 +116,79 @@ export class ModeratorComponent implements OnInit  {
   }
 
   ngOnInit(): void {
-    // Ovdje samo učitavamo podatke, ne diramo mapu
+    // Ovdje samo ucitavamo podatke, ne diramo mapu
     // this.loadApprovedIncidents();
     // this.loadOtherIncidents();
     this.loadAllIncidents();
   }
 
-   onMapReady(): void {
+  onMapReady(): void {
     console.log('🗺️ Mapa spremna — dodajemo markere.');
 
-    // ➕ Prikaži sve incidente na mapi kada je spremna
+    // Prikazi sve incidente na mapi kada je spremna
     // this.mapComponent.updateMarkers(this.approvedIncidents);
     // this.mapComponent.addMarkers(this.otherIncidents);
   }
 
   private loadAllIncidents(): void {
-  const requests = [
-    this.incidentService.getIncidents(IncidentStatus.Approved),
-    this.incidentService.getIncidents(IncidentStatus.Pending),
-    this.incidentService.getIncidents(IncidentStatus.Rejected),
-    this.incidentService.getIncidents(IncidentStatus.Canceled),
-  ];
+    const requests = [
+      this.incidentService.getIncidents(IncidentStatus.Approved),
+      this.incidentService.getIncidents(IncidentStatus.Pending),
+      this.incidentService.getIncidents(IncidentStatus.Rejected),
+      this.incidentService.getIncidents(IncidentStatus.Canceled),
+    ];
 
-  forkJoin(requests).subscribe({
-    next: (responses) => {
-      const allIncidents = responses.flatMap(r => r.content);
-      console.log('✅ Svi incidenti učitani:', allIncidents);
+    forkJoin(requests).subscribe({
+      next: (responses) => {
+        const allIncidents = responses.flatMap(r => r.content);
+        console.log('Incidents ready:', allIncidents);
 
-      // Kada je mapa spremna, dodaj sve markere
-      if (this.mapComponent) {
-        this.mapComponent.updateMarkers(allIncidents);
-      }
-    },
-    error: (err) => console.error('⛔ Greška pri učitavanju incidenata:', err),
-  });
-}
+        if (this.mapComponent) {
+          this.mapComponent.updateMarkers(allIncidents);
+        }
+      },
+      error: (err) => console.error('Reading incidents error:', err),
+    });
+  }
 
 
 
   private loadApprovedIncidents(): void {
     this.incidentService.getIncidents(IncidentStatus.Approved).subscribe({
       next: (data) => (this.approvedIncidents = data.content),
-      error: (err) => console.error('⛔ Error loading approved:', err),
+      error: (err) => console.error('Error loading approved:', err),
     });
   }
 
   private loadOtherIncidents(): void {
-  const requests = [
-    this.incidentService.getIncidents(IncidentStatus.Pending),
-    this.incidentService.getIncidents(IncidentStatus.Rejected),
-    this.incidentService.getIncidents(IncidentStatus.Canceled),
-  ];
+    const requests = [
+      this.incidentService.getIncidents(IncidentStatus.Pending),
+      this.incidentService.getIncidents(IncidentStatus.Rejected),
+      this.incidentService.getIncidents(IncidentStatus.Canceled),
+    ];
 
-  forkJoin(requests).subscribe({
-    next: (responses) => {
-      // 🔹 Spoji sve incidente iz tri odgovora u jedan niz
-      this.otherIncidents = responses.flatMap((r) => r.content);
+    forkJoin(requests).subscribe({
+      next: (responses) => {
+        this.otherIncidents = responses.flatMap((r) => r.content);
 
-      console.log('✅ Učitani ostali incidenti (Pending/Rejected/Canceled):', this.otherIncidents);
+        console.log('Other incidents ready (Pending/Rejected/Canceled):', this.otherIncidents);
 
-      // Ako je mapa već spremna, odmah ih prikaži
-      if (this.mapComponent) {
-        this.mapComponent.addMarkers(this.otherIncidents);
-      }
-    },
-    error: (err) => console.error('⛔ Greška pri učitavanju ostalih incidenata:', err),
-  });
-}
+        if (this.mapComponent) {
+          this.mapComponent.addMarkers(this.otherIncidents);
+        }
+      },
+      error: (err) => console.error('Error rading other incidnets:', err),
+    });
+  }
 
 
   onTypeChange(): void {
     const form = this.filterForm;
     const selectedType = form.get('type')?.value as IncidentType;
     const subtypes =
-    this.incidentTypes.find((t) => t.type === selectedType)?.subtypes || [];
+      this.incidentTypes.find((t) => t.type === selectedType)?.subtypes || [];
     this.selectedFilterSubtypes = subtypes;
-    
+
 
     form.get('subtype')?.setValue('');
   }
@@ -217,11 +214,10 @@ export class ModeratorComponent implements OnInit  {
       next: (page) => {
         this.approvedIncidents = page.content;
         this.mapComponent.updateMarkers(this.approvedIncidents);
-        // Emitiraj event ili postavi te incidente na mapu
-        console.log('Filtrirani incidenti:', this.approvedIncidents);
+        console.log('Filtered incidents:', this.approvedIncidents);
       },
       error: (error) => {
-        console.error('Greška pri filtriranju incidenata:', error);
+        console.error('Error reading filtered incidents:', error);
       }
     });
   }

@@ -52,7 +52,7 @@ export class IncidentService {
     const url = API_INCIDENT_ENDPOINTS.updateStatus(id);
     const body = { status: newStatus };
   
-    console.log(`📡 PUT ${url}`, body);
+    console.log(`PUT ${url}`, body);
   
     return this.http.put<IncidentModel>(url, body, {
       headers: { 'Content-Type': 'application/json' }

@@ -44,12 +44,11 @@ export class MonthlyIncidentsComponent implements OnInit {
   selectedYear!: number;
   selectedMonth!: number;
 
-  // 🔹 Boje po tipu
   private readonly typeColors: Record<IncidentType, string> = {
-    [IncidentType.Fire]: '#e53935',     // crvena
-    [IncidentType.Flood]: '#1e88e5',    // plava
-    [IncidentType.Accident]: '#fbc02d', // žuta
-    [IncidentType.Crime]: '#43a047'     // zelena
+    [IncidentType.Fire]: '#e53935',
+    [IncidentType.Flood]: '#1e88e5',
+    [IncidentType.Accident]: '#fbc02d',
+    [IncidentType.Crime]: '#43a047'
   };
 
   lineChartType: ChartType = 'line';
@@ -108,13 +107,12 @@ export class MonthlyIncidentsComponent implements OnInit {
   loadData(): void {
     this.analyticsService.getIncidentCountByMonth(this.selectedYear, this.selectedMonth).subscribe({
       next: (data: IncidentPerDayModel[]) => {
-        console.log('📊 Podaci sa backa:', data);
+        console.log('Backend data:', data);
 
         const daysInMonth = new Date(this.selectedYear, this.selectedMonth, 0).getDate();
         const labels = Array.from({ length: daysInMonth }, (_, i) => (i + 1).toString());
         this.lineChartData.labels = labels;
 
-        // 🔹 Grupisanje po tipu incidenta
         const groupedByType = data.reduce((acc, item) => {
           const typeKey = item.type.toUpperCase();
           if (!acc[typeKey]) acc[typeKey] = [];
@@ -122,7 +120,6 @@ export class MonthlyIncidentsComponent implements OnInit {
           return acc;
         }, {} as Record<string, IncidentPerDayModel[]>);
 
-        // 🔹 Kreiraj dataset za svaki tip
         const datasets = Object.entries(groupedByType).map(([type, incidents]) => {
           const color = this.typeColors[type as IncidentType] ?? '#888';
           const counts = labels.map(dayLabel => {
@@ -134,7 +131,7 @@ export class MonthlyIncidentsComponent implements OnInit {
             data: counts,
             label: type,
             borderColor: color,
-            backgroundColor: color + '33', // poluprozirna pozadina
+            backgroundColor: color + '33',
             fill: true,
             tension: 0.3,
             pointRadius: 4,
@@ -143,14 +140,13 @@ export class MonthlyIncidentsComponent implements OnInit {
           };
         });
 
-        // 🔹 Postavi datasets i osveži graf
         this.lineChartData.datasets = datasets;
-        this.lineChartData = { ...this.lineChartData }; // trigger promjenu reference
+        this.lineChartData = { ...this.lineChartData };
         this.chart?.update();
 
-        console.log('✅ Datasets:', this.lineChartData.datasets);
+        console.log('Datasets:', this.lineChartData.datasets);
       },
-      error: (err) => console.error('Greška pri učitavanju mjesečnih incidenata:', err)
+      error: (err) => console.error('Reading monthly incidents error:', err)
     });
   }
 }
