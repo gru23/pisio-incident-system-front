@@ -299,6 +299,9 @@ export class MainComponent implements OnInit {
         console.error('Error sending incident analytics:', err);
       },
     });
+    
+    this.selectedImages = [];
+
   }
 
 
